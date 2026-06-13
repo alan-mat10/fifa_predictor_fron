@@ -23,7 +23,9 @@ export default function MyPredictions() {
             team1Score: p.predictedTeam1Score,
             team2Score: p.predictedTeam2Score,
             scored: p.matchStatus === 'COMPLETED',
-        })))
+          })))
+        }
+        if (tournRes.status === 'fulfilled') setTournamentPreds(tournRes.value.data)
       } catch (err) {
         console.error(err)
       } finally {
