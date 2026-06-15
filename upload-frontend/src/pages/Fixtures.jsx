@@ -54,7 +54,7 @@ export default function Fixtures() {
   const groupedByDate = useMemo(() => {
     const groups = {}
     filteredMatches.forEach((m) => {
-      const date = m.matchTime ? new Date(m.matchTime + '-04:00').toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }) : 'TBD'
+      const date = m.matchTime ? new Date(m.matchTime).toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }) : 'TBD'
       if (!groups[date]) groups[date] = []
       groups[date].push(m)
     })
@@ -63,7 +63,8 @@ export default function Fixtures() {
 
   const formatTime = (dateStr) => {
     if (!dateStr) return 'TBD'
-    const d = new Date(dateStr + '-04:00')  // treat as EDT
+    // Backend already sends times converted to IST
+    const d = new Date(dateStr)
     return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
   }
 

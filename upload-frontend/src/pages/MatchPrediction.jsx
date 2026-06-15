@@ -135,7 +135,8 @@ export default function MatchPrediction() {
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return 'TBD'
-    const d = new Date(dateStr + '-04:00')  // treat as EDT
+    // Backend already sends times converted to IST
+    const d = new Date(dateStr)
     return d.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }) + ' • ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
   }
 

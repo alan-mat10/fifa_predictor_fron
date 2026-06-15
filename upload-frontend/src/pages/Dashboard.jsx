@@ -48,8 +48,8 @@ export default function Dashboard() {
 
   const formatTime = (dateStr) => {
     if (!dateStr) return ''
-    // Times from backend are ET (UTC-4 in summer). Add offset to get correct IST display.
-    const d = new Date(dateStr + '-04:00')  // treat as EDT
+    // Backend already sends times converted to IST
+    const d = new Date(dateStr)
     return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' })
   }
 
