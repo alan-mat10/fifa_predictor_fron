@@ -15,7 +15,7 @@ export default function Rules() {
         <div className="space-y-3">
           <PointRow icon="check_circle" color="secondary" points="+1" label="Correct Match Result" desc="Predict win/draw/loss correctly" />
           <PointRow icon="scoreboard" color="primary" points="+2" label="Exact Score" desc="Predict the exact scoreline (bonus on top of match result = +3 total)" />
-          <PointRow icon="person" color="secondary" points="+2" label="Goal Scorer" desc="Per correct player you predicted would score" />
+          <PointRow icon="person" color="secondary" points="+2" label="Goal Scorer" desc="Per correct player × number of goals they score (e.g., 2 goals = +4)" />
           <PointRow icon="star" color="tertiary" points="+3" label="Man of the Match" desc="Predict the official MOTM correctly" />
         </div>
       </div>
@@ -69,15 +69,15 @@ export default function Rules() {
         <div className="bg-surface-dim rounded-lg p-4 font-label text-xs space-y-2">
           <p className="text-on-surface-variant">Match: Mexico 2 - 0 South Africa</p>
           <p className="text-on-surface-variant">Your prediction: 2 - 0 ✅</p>
-          <p className="text-on-surface-variant">Your goal scorers: Julián Quiñones ✅, Santiago Giménez ❌</p>
+          <p className="text-on-surface-variant">Your goal scorers: Julián Quiñones ×2 ✅ (scored 2), Santiago Giménez ❌</p>
           <p className="text-on-surface-variant">Your MOTM: Julián Quiñones ✅</p>
           <div className="border-t border-outline-variant pt-2 mt-2 space-y-1">
             <p className="text-secondary">+ 1 (correct result)</p>
             <p className="text-primary">+ 2 (exact score)</p>
-            <p className="text-secondary">+ 2 (Quiñones scored)</p>
+            <p className="text-secondary">+ 4 (Quiñones scored 2 goals × 2pts)</p>
             <p className="text-on-surface-variant">+ 0 (Giménez didn't score)</p>
             <p className="text-tertiary">+ 3 (correct MOTM)</p>
-            <p className="text-on-surface font-bold border-t border-outline-variant pt-1 mt-1">= 8 points total for this match</p>
+            <p className="text-on-surface font-bold border-t border-outline-variant pt-1 mt-1">= 10 points total for this match</p>
           </div>
         </div>
       </div>

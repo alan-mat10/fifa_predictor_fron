@@ -3,10 +3,155 @@ import { leaderboardAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 
+function PointsBreakdownModal({ username, onClose }) {
+  const [breakdown, setBreakdown] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchBreakdown() {
+      try {
+        const res = await leaderboardAPI.getBreakdown(username)
+        setBreakdown(res.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBreakdown()
+  }, [username])
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div
+        className="relative bg-surface-container rounded-2xl border border-outline-variant shadow-2xl w-full max-w-lg max-h-[80vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-outline-variant">
+          <div>
+            <h2 className="font-headline font-bold text-lg">{username}</h2>
+            <p className="font-label text-xs text-on-surface-variant">Points Breakdown</p>
+          </div>
+          <button onClick={onClose} className="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors">close</button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-5">
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner text="Loading breakdown..." />
+            </div>
+          ) : breakdown ? (
+            <>
+              {/* Total */}
+              <div className="text-center py-3 bg-primary/10 rounded-xl border border-primary/20">
+                <span className="font-headline font-extrabold text-3xl text-primary neon-glow-primary">{breakdown.totalPoints}</span>
+                <p className="font-label text-xs text-on-surface-variant mt-1">Total Points</p>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <SummaryCard label="Match Results" points={breakdown.summary.matchResults.points} count={breakdown.summary.matchResults.count} color="secondary" icon="check_circle" />
+                <SummaryCard label="Exact Scores" points={breakdown.summary.exactScores.points} count={breakdown.summary.exactScores.count} color="primary" icon="scoreboard" />
+                <SummaryCard label="Goal Scorers" points={breakdown.summary.goalScorers.points} count={breakdown.summary.goalScorers.count} color="secondary" icon="sports_soccer" />
+                <SummaryCard label="Man of the Match" points={breakdown.summary.motm.points} count={breakdown.summary.motm.count} color="tertiary" icon="star" />
+                {breakdown.summary.tournament.points > 0 && (
+                  <SummaryCard label="Tournament" points={breakdown.summary.tournament.points} count={breakdown.summary.tournament.count} color="tertiary" icon="emoji_events" />
+                )}
+              </div>
+
+              {/* Match Details */}
+              {breakdown.matchDetails.length > 0 && (
+                <BreakdownSection title="Match Predictions" icon="scoreboard" color="primary">
+                  {breakdown.matchDetails.map((d, i) => (
+                    <DetailRow key={i} left={d.match} mid={`${d.predicted} → ${d.actual}`} right={`+${d.points}`} tag={d.type} />
+                  ))}
+                </BreakdownSection>
+              )}
+
+              {/* Goal Scorer Details */}
+              {breakdown.goalScorerDetails.length > 0 && (
+                <BreakdownSection title="Goal Scorers" icon="sports_soccer" color="secondary">
+                  {breakdown.goalScorerDetails.map((d, i) => (
+                    <DetailRow key={i} left={d.match} mid={d.player} right={`+${d.points}`} />
+                  ))}
+                </BreakdownSection>
+              )}
+
+              {/* MOTM Details */}
+              {breakdown.motmDetails.length > 0 && (
+                <BreakdownSection title="Man of the Match" icon="star" color="tertiary">
+                  {breakdown.motmDetails.map((d, i) => (
+                    <DetailRow key={i} left={d.match} mid={d.player} right={`+${d.points}`} />
+                  ))}
+                </BreakdownSection>
+              )}
+
+              {/* Tournament Details */}
+              {breakdown.tournamentDetails.length > 0 && (
+                <BreakdownSection title="Tournament Awards" icon="emoji_events" color="tertiary">
+                  {breakdown.tournamentDetails.map((d, i) => (
+                    <DetailRow key={i} left={d.type} mid={d.prediction} right={`+${d.points}`} />
+                  ))}
+                </BreakdownSection>
+              )}
+            </>
+          ) : (
+            <p className="text-center text-on-surface-variant text-sm py-8">Failed to load breakdown</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SummaryCard({ label, points, count, color, icon }) {
+  return (
+    <div className={`p-3 rounded-lg bg-${color}/10 border border-${color}/20`}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`material-symbols-outlined text-${color} text-sm`}>{icon}</span>
+        <span className="font-label text-[10px] text-on-surface-variant uppercase tracking-wider">{label}</span>
+      </div>
+      <span className={`font-headline font-extrabold text-lg text-${color}`}>+{points}</span>
+      <span className="font-label text-[10px] text-on-surface-variant ml-1">({count}x)</span>
+    </div>
+  )
+}
+
+function BreakdownSection({ title, icon, color, children }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`material-symbols-outlined text-${color} text-sm`}>{icon}</span>
+        <span className="font-label text-xs font-bold uppercase tracking-wider text-on-surface-variant">{title}</span>
+      </div>
+      <div className="space-y-1">{children}</div>
+    </div>
+  )
+}
+
+function DetailRow({ left, mid, right, tag }) {
+  return (
+    <div className="flex items-center justify-between px-3 py-2 bg-surface-dim rounded-lg text-xs">
+      <div className="flex-1 min-w-0">
+        <p className="font-label text-on-surface truncate">{left}</p>
+        <p className="font-label text-on-surface-variant text-[10px] truncate">{mid}</p>
+      </div>
+      <div className="flex items-center gap-2 ml-2 shrink-0">
+        {tag && <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">{tag}</span>}
+        <span className="font-headline font-bold text-secondary">{right}</span>
+      </div>
+    </div>
+  )
+}
+
 export default function Leaderboard() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [breakdownUser, setBreakdownUser] = useState(null)
   const { user } = useAuth()
 
   useEffect(() => {
@@ -31,7 +176,6 @@ export default function Leaderboard() {
   if (loading) return <LoadingSpinner text="Loading standings..." />
 
   const top3 = entries.slice(0, 3)
-  const rest = filtered.slice(top3.length)
   const podiumOrder = [1, 0, 2] // silver, gold, bronze positions
 
   return (
@@ -62,9 +206,12 @@ export default function Leaderboard() {
                   </span>
                 </div>
                 <span className="font-label text-xs font-bold mb-1 truncate max-w-[80px]">{entry.username}</span>
-                <span className={`font-headline font-extrabold text-sm ${isGold ? 'neon-glow-primary text-primary' : isSilver ? 'text-secondary' : 'text-tertiary'}`}>
+                <button
+                  onClick={() => setBreakdownUser(entry.username)}
+                  className={`font-headline font-extrabold text-sm cursor-pointer hover:underline ${isGold ? 'neon-glow-primary text-primary' : isSilver ? 'text-secondary' : 'text-tertiary'}`}
+                >
                   {entry.totalPoints} PTS
-                </span>
+                </button>
                 <div className={`w-20 ${heights[idx]} mt-3 rounded-t-lg ${colors[idx]} border flex items-center justify-center`}>
                   <span className="font-headline font-extrabold text-2xl opacity-50">{idx + 1}</span>
                 </div>
@@ -88,7 +235,7 @@ export default function Leaderboard() {
 
       {/* Full List */}
       <div className="space-y-2">
-        {(search ? filtered : entries).map((entry, idx) => {
+        {(search ? filtered : entries).map((entry) => {
           const rank = entries.indexOf(entry) + 1
           const isCurrentUser = entry.username === user?.username
           return (
@@ -118,15 +265,23 @@ export default function Leaderboard() {
                   {isCurrentUser && <span className="ml-2 text-[10px] text-secondary/60">(YOU)</span>}
                 </span>
               </div>
-              <span className={`font-headline font-extrabold text-sm ${
-                isCurrentUser ? 'text-secondary neon-glow-secondary' : rank === 1 ? 'text-primary' : 'text-on-surface-variant'
-              }`}>
+              <button
+                onClick={() => setBreakdownUser(entry.username)}
+                className={`font-headline font-extrabold text-sm cursor-pointer hover:underline transition-colors ${
+                  isCurrentUser ? 'text-secondary neon-glow-secondary' : rank === 1 ? 'text-primary' : 'text-on-surface-variant hover:text-secondary'
+                }`}
+              >
                 {entry.totalPoints} PTS
-              </span>
+              </button>
             </div>
           )
         })}
       </div>
+
+      {/* Points Breakdown Modal */}
+      {breakdownUser && (
+        <PointsBreakdownModal username={breakdownUser} onClose={() => setBreakdownUser(null)} />
+      )}
     </div>
   )
 }

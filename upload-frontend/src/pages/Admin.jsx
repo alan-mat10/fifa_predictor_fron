@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { matchesAPI, playersAPI, adminAPI } from '../services/api'
+import { matchesAPI, playersAPI, adminAPI, leaderboardAPI } from '../services/api'
 import { useToast } from '../components/Toast'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -7,6 +7,11 @@ export default function Admin() {
   const { addToast } = useToast()
   const [matches, setMatches] = useState([])
   const [loading, setLoading] = useState(true)
+
+  // User score management state
+  const [users, setUsers] = useState([])
+  const [scoreUsername, setScoreUsername] = useState('')
+  const [userPredictions, setUserPredictions] = useState(null)
 
   // Match result state
   const [selectedMatchId, setSelectedMatchId] = useState('')
@@ -30,7 +35,9 @@ export default function Admin() {
 
   // MOTM state
   const [motmMatchId, setMotmMatchId] = useState('')
-  const [motmPlayerName, setMotmPlayerName] = useState('')
+  const [motmPlayerSearch, setMotmPlayerSearch] = useState('')
+  const [motmPlayerResults, setMotmPlayerResults] = useState([])
+  const [motmSelectedPlayer, setMotmSelectedPlayer] = useState(null)
   const [motmSubmitting, setMotmSubmitting] = useState(false)
 
   // Invite code state
@@ -41,9 +48,10 @@ export default function Admin() {
   useEffect(() => {
     async function fetchMatches() {
       try {
-        const [matchRes, codesRes] = await Promise.allSettled([
+        const [matchRes, codesRes, usersRes] = await Promise.allSettled([
           matchesAPI.getAll(),
           adminAPI.getInviteCodes(),
+          leaderboardAPI.get(),
         ])
         if (matchRes.status === 'fulfilled') {
           setMatches(matchRes.value.data.map(m => ({
@@ -53,6 +61,7 @@ export default function Admin() {
           })))
         }
         if (codesRes.status === 'fulfilled') setInviteCodes(codesRes.value.data)
+        if (usersRes.status === 'fulfilled') setUsers(usersRes.value.data)
       } catch (err) {
         console.error(err)
       } finally {
@@ -77,6 +86,22 @@ export default function Admin() {
     }, 300)
     return () => clearTimeout(timeout)
   }, [gsPlayerSearch])
+
+  useEffect(() => {
+    if (motmPlayerSearch.length < 2) {
+      setMotmPlayerResults([])
+      return
+    }
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await playersAPI.search(motmPlayerSearch)
+        setMotmPlayerResults(res.data.slice(0, 10))
+      } catch (err) {
+        console.error(err)
+      }
+    }, 300)
+    return () => clearTimeout(timeout)
+  }, [motmPlayerSearch])
 
   const handleSubmitResult = async () => {
     if (!selectedMatchId) return
@@ -148,12 +173,13 @@ export default function Admin() {
   }
 
   const handleSubmitMotm = async () => {
-    if (!motmMatchId || !motmPlayerName.trim()) return
+    if (!motmMatchId || !motmSelectedPlayer) return
     setMotmSubmitting(true)
     try {
-      await adminAPI.submitMotm(Number(motmMatchId), motmPlayerName.trim())
+      await adminAPI.submitMotm(Number(motmMatchId), motmSelectedPlayer.name)
       addToast('MOTM set and points awarded', 'success')
-      setMotmPlayerName('')
+      setMotmSelectedPlayer(null)
+      setMotmPlayerSearch('')
     } catch (err) {
       addToast(err.response?.data?.message || 'Failed to set MOTM', 'error')
     } finally {
@@ -445,22 +471,58 @@ export default function Admin() {
               <option key={m.id} value={m.id}>{m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})</option>
             ))}
           </select>
-          <div className="flex gap-3">
-            <input
-              type="text"
-              value={motmPlayerName}
-              onChange={(e) => setMotmPlayerName(e.target.value)}
-              placeholder="MOTM player name..."
-              className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
-            />
-            <button
-              onClick={handleSubmitMotm}
-              disabled={!motmMatchId || !motmPlayerName.trim() || motmSubmitting}
-              className="px-6 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
-            >
-              {motmSubmitting ? '...' : 'SET MOTM'}
-            </button>
-          </div>
+
+          {motmMatchId && (
+            <>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">search</span>
+                <input
+                  type="text"
+                  value={motmPlayerSearch}
+                  onChange={(e) => { setMotmPlayerSearch(e.target.value); setMotmSelectedPlayer(null) }}
+                  placeholder="Search MOTM player..."
+                  className="w-full bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm pl-10 pr-4 py-2.5 rounded-lg"
+                />
+              </div>
+
+              {motmPlayerResults.length > 0 && !motmSelectedPlayer && (
+                <div className="bg-surface-dim border border-outline-variant rounded-lg max-h-40 overflow-y-auto">
+                  {motmPlayerResults.map((player) => (
+                    <button
+                      key={player.id}
+                      onClick={() => {
+                        setMotmSelectedPlayer(player)
+                        setMotmPlayerSearch(player.name)
+                        setMotmPlayerResults([])
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-variant transition-colors text-left border-b border-outline-variant last:border-b-0"
+                    >
+                      <span className="font-label text-sm">{player.name} ({player.teamName})</span>
+                      <span className="material-symbols-outlined text-tertiary text-sm">check_circle</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {motmSelectedPlayer && (
+                <div className="flex items-center justify-between px-3 py-2 bg-surface-variant rounded-lg border border-tertiary/30">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-tertiary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                    <span className="font-label text-sm">{motmSelectedPlayer.name} ({motmSelectedPlayer.teamName})</span>
+                  </div>
+                  <button onClick={() => { setMotmSelectedPlayer(null); setMotmPlayerSearch('') }} className="material-symbols-outlined text-error text-sm">close</button>
+                </div>
+              )}
+            </>
+          )}
+
+          <button
+            onClick={handleSubmitMotm}
+            disabled={!motmMatchId || !motmSelectedPlayer || motmSubmitting}
+            className="w-full py-3 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
+          >
+            {motmSubmitting ? 'SUBMITTING...' : 'SET MOTM'}
+          </button>
         </div>
       </div>
 
@@ -553,7 +615,7 @@ export default function Admin() {
             type="text"
             value={newCodeLabel}
             onChange={(e) => setNewCodeLabel(e.target.value)}
-            placeholder="Label (e.g., For Rahul)"
+            placeholder="Label (e.g., For Shibunan)"
             className="flex-1 bg-surface-dim border border-outline-variant focus:border-primary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
           />
           <button
@@ -618,6 +680,168 @@ export default function Admin() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* User Score Management */}
+      <div className="bg-surface-container rounded-xl p-6 border border-error/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-error">edit_note</span>
+          Edit User Prediction Points
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Select a user, then edit points on individual predictions. Total auto-updates.
+        </p>
+
+        <div className="space-y-4">
+          {/* User select */}
+          <select
+            value={scoreUsername}
+            onChange={async (e) => {
+              setScoreUsername(e.target.value)
+              setUserPredictions(null)
+              if (e.target.value) {
+                try {
+                  const res = await adminAPI.getUserPredictions(e.target.value)
+                  setUserPredictions(res.data)
+                } catch (err) {
+                  addToast('Failed to load predictions', 'error')
+                }
+              }
+            }}
+            className="w-full bg-surface-dim border border-outline-variant focus:border-error focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-3 rounded-lg"
+          >
+            <option value="">Select user...</option>
+            {users.map((u) => (
+              <option key={u.username} value={u.username}>{u.username} ({u.totalPoints} pts)</option>
+            ))}
+          </select>
+
+          {/* Predictions Editor */}
+          {userPredictions && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between px-3 py-2 bg-primary/10 rounded-lg border border-primary/20">
+                <span className="font-label text-sm text-on-surface">{userPredictions.username}</span>
+                <span className="font-headline font-bold text-primary">{userPredictions.totalPoints} PTS</span>
+              </div>
+
+              {/* Match Predictions */}
+              {userPredictions.matchPredictions?.length > 0 && (
+                <PredictionEditSection
+                  title="Match Predictions"
+                  icon="scoreboard"
+                  items={userPredictions.matchPredictions}
+                  type="match"
+                  renderLabel={(item) => `${item.match} (${item.predicted} → ${item.actual})`}
+                  onUpdate={async (id, pts) => {
+                    await adminAPI.updatePredictionPoints('match', id, pts)
+                    const res = await adminAPI.getUserPredictions(scoreUsername)
+                    setUserPredictions(res.data)
+                    const usersRes = await leaderboardAPI.get()
+                    setUsers(usersRes.data)
+                    addToast('Points updated', 'success')
+                  }}
+                  addToast={addToast}
+                />
+              )}
+
+              {/* Goal Scorer Predictions */}
+              {userPredictions.goalScorerPredictions?.length > 0 && (
+                <PredictionEditSection
+                  title="Goal Scorers"
+                  icon="sports_soccer"
+                  items={userPredictions.goalScorerPredictions}
+                  type="goalScorer"
+                  renderLabel={(item) => `${item.match} — ${item.player} (×${item.predictedGoals || 1})`}
+                  onUpdate={async (id, pts) => {
+                    await adminAPI.updatePredictionPoints('goalScorer', id, pts)
+                    const res = await adminAPI.getUserPredictions(scoreUsername)
+                    setUserPredictions(res.data)
+                    const usersRes = await leaderboardAPI.get()
+                    setUsers(usersRes.data)
+                    addToast('Points updated', 'success')
+                  }}
+                  addToast={addToast}
+                />
+              )}
+
+              {/* MOTM Predictions */}
+              {userPredictions.motmPredictions?.length > 0 && (
+                <PredictionEditSection
+                  title="Man of the Match"
+                  icon="star"
+                  items={userPredictions.motmPredictions}
+                  type="motm"
+                  renderLabel={(item) => `${item.match} — ${item.player}`}
+                  onUpdate={async (id, pts) => {
+                    await adminAPI.updatePredictionPoints('motm', id, pts)
+                    const res = await adminAPI.getUserPredictions(scoreUsername)
+                    setUserPredictions(res.data)
+                    const usersRes = await leaderboardAPI.get()
+                    setUsers(usersRes.data)
+                    addToast('Points updated', 'success')
+                  }}
+                  addToast={addToast}
+                />
+              )}
+
+              {userPredictions.matchPredictions?.length === 0 && userPredictions.goalScorerPredictions?.length === 0 && userPredictions.motmPredictions?.length === 0 && (
+                <p className="text-xs text-on-surface-variant text-center py-4">No scored predictions yet</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PredictionEditSection({ title, icon, items, type, renderLabel, onUpdate, addToast }) {
+  const [editingId, setEditingId] = useState(null)
+  const [editValue, setEditValue] = useState('')
+
+  return (
+    <div>
+      <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-2 flex items-center gap-1">
+        <span className="material-symbols-outlined text-sm">{icon}</span>
+        {title}
+      </p>
+      <div className="space-y-1">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-center justify-between px-3 py-2 bg-surface-dim rounded-lg text-xs">
+            <span className="font-label text-on-surface flex-1 truncate mr-2">{renderLabel(item)}</span>
+            {editingId === item.id ? (
+              <div className="flex items-center gap-1 shrink-0">
+                <input
+                  type="number"
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="w-14 bg-surface border border-error/50 text-on-surface font-headline font-bold text-sm px-2 py-0.5 rounded text-center"
+                  autoFocus
+                />
+                <button
+                  onClick={async () => {
+                    try {
+                      await onUpdate(item.id, Number(editValue))
+                      setEditingId(null)
+                    } catch (err) {
+                      addToast('Failed to update', 'error')
+                    }
+                  }}
+                  className="material-symbols-outlined text-secondary text-sm hover:text-secondary/80"
+                >check</button>
+                <button onClick={() => setEditingId(null)} className="material-symbols-outlined text-on-surface-variant text-sm">close</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setEditingId(item.id); setEditValue(String(item.points)) }}
+                className="flex items-center gap-1 shrink-0 hover:bg-error/10 px-2 py-0.5 rounded transition-colors"
+              >
+                <span className="font-headline font-bold text-sm text-secondary">+{item.points}</span>
+                <span className="material-symbols-outlined text-on-surface-variant text-xs">edit</span>
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   )
