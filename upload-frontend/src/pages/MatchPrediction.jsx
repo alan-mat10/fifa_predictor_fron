@@ -254,6 +254,7 @@ export default function MatchPrediction() {
       </div>
 
       {/* Score Prediction */}
+      {match.status !== 'COMPLETED' && (
       <div className="bg-surface-container rounded-xl p-6 neon-border">
         <h3 className="font-headline font-bold text-sm mb-6 flex items-center gap-2">
           <span className="material-symbols-outlined text-primary">scoreboard</span>
@@ -310,8 +311,10 @@ export default function MatchPrediction() {
           {submitting ? 'SAVING...' : existingPrediction ? 'UPDATE PREDICTION' : 'SUBMIT PREDICTION'}
         </button>
       </div>
+      )}
 
       {/* Goal Scorer Prediction */}
+      {match.status !== 'COMPLETED' && (
       <div className="bg-surface-container rounded-xl p-6 card-glow">
         <h3 className="font-headline font-bold text-sm mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-secondary">sports_soccer</span>
@@ -403,8 +406,10 @@ export default function MatchPrediction() {
           {submitting ? 'SAVING...' : hasExistingScorers ? 'UPDATE GOAL SCORERS' : 'SAVE GOAL SCORERS'}
         </button>
       </div>
+      )}
 
       {/* Man of the Match Prediction */}
+      {match.status !== 'COMPLETED' && (
       <div className="bg-surface-container rounded-xl p-6 border border-tertiary/30">
         <h3 className="font-headline font-bold text-sm mb-2 flex items-center gap-2">
           <span className="material-symbols-outlined text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -442,6 +447,10 @@ export default function MatchPrediction() {
           {submitting ? 'SAVING...' : hasExistingMotm ? 'UPDATE MOTM PICK' : 'SAVE MOTM PICK'}
         </button>
       </div>
+      )}
+
+      {/* All Predictions Section (shown after match is completed) */}
+      {match.status === 'COMPLETED' && <AllPredictionsSection matchId={matchId} match={match} />}
     </div>
   )
 }
@@ -533,5 +542,135 @@ function GroupedMotmList({ players, motmPick, onSelect }) {
         )
       })}
     </>
+  )
+}
+
+function AllPredictionsSection({ matchId, match }) {
+  const [allPreds, setAllPreds] = useState([])
+  const [allGs, setAllGs] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [expanded, setExpanded] = useState(null)
+
+  useEffect(() => {
+    async function fetchAll() {
+      try {
+        const [predRes, gsRes] = await Promise.allSettled([
+          predictionsAPI.getForMatch(matchId),
+          predictionsAPI.getAllGoalScorerPredictions(matchId),
+        ])
+        if (predRes.status === 'fulfilled') setAllPreds(predRes.value.data)
+        if (gsRes.status === 'fulfilled') setAllGs(gsRes.value.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAll()
+  }, [matchId])
+
+  if (loading) return <div className="text-center py-4 text-on-surface-variant font-label text-xs">Loading predictions...</div>
+  if (allPreds.length === 0) return null
+
+  // Group goal scorers by username
+  const gsByUser = {}
+  for (const gs of allGs) {
+    if (!gsByUser[gs.username]) gsByUser[gs.username] = []
+    gsByUser[gs.username].push(gs)
+  }
+
+  return (
+    <div className="bg-surface-container rounded-xl p-6 border border-outline-variant">
+      <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+        <span className="material-symbols-outlined text-primary">groups</span>
+        All Predictions ({allPreds.length})
+      </h3>
+
+      <div className="space-y-2">
+        {allPreds.map((pred) => {
+          const userGs = gsByUser[pred.username] || []
+          const gsPts = userGs.reduce((s, g) => s + (g.pointsEarned || 0), 0)
+          const totalPts = pred.pointsEarned + gsPts
+          const isExpanded = expanded === pred.username
+
+          return (
+            <div key={pred.id || pred.username} className="bg-surface-dim rounded-lg border border-outline-variant/50 overflow-hidden">
+              {/* Collapsed header — click to expand */}
+              <button
+                onClick={() => setExpanded(isExpanded ? null : pred.username)}
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-surface-variant/30 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-on-surface-variant text-sm">person</span>
+                  <span className="font-headline font-bold text-sm">{pred.username}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`font-headline font-bold text-sm ${totalPts > 0 ? 'text-secondary neon-glow-secondary' : 'text-error'}`}>
+                    {totalPts > 0 ? `+${totalPts}` : '0'} PTS
+                  </span>
+                  <span className={`material-symbols-outlined text-on-surface-variant text-sm transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                    expand_more
+                  </span>
+                </div>
+              </button>
+
+              {/* Expanded details */}
+              {isExpanded && (
+                <div className="px-4 pb-4 pt-1 border-t border-outline-variant/50 space-y-3">
+                  {/* Score prediction */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-sm">scoreboard</span>
+                      <span className="font-label text-xs">Score: {pred.predictedTeam1Score} - {pred.predictedTeam2Score}</span>
+                    </div>
+                    <div>
+                      {pred.pointsEarned === 3 && (
+                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">+1 Result +2 Exact</span>
+                      )}
+                      {pred.pointsEarned === 1 && (
+                        <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded font-bold">+1 Result</span>
+                      )}
+                      {pred.pointsEarned === 0 && (
+                        <span className="text-[10px] bg-error/10 text-error px-2 py-0.5 rounded font-bold">✗ Wrong</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Goal scorers */}
+                  {userGs.length > 0 && (
+                    <div className="space-y-1.5">
+                      {userGs.map((gs) => (
+                        <div key={gs.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-secondary text-sm">sports_soccer</span>
+                            <span className="font-label text-xs">{gs.playerName}</span>
+                            {gs.predictedGoals > 1 && <span className="text-[9px] bg-primary/10 text-primary px-1 rounded">×{gs.predictedGoals}</span>}
+                          </div>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                            gs.pointsEarned > 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'
+                          }`}>
+                            {gs.pointsEarned > 0 ? `+${gs.pointsEarned}` : '✗'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* MOTM — TODO: needs backend endpoint for per-match MOTM predictions */}
+                  {match.manOfTheMatch && (
+                    <div className="flex items-center justify-between pt-1 border-t border-outline-variant/30">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-tertiary text-sm">star</span>
+                        <span className="font-label text-xs text-on-surface-variant">MOTM: {match.manOfTheMatch}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }

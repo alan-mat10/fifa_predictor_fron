@@ -54,12 +54,14 @@ export const predictionsAPI = {
   getMy: () => api.get('/api/predictions/my'),
   getForMatch: (matchId) => api.get(`/api/predictions/match/${matchId}`),
   getMyTournament: () => api.get('/api/predictions/tournament'),
-  predictGoalScorers: (matchId, playerIds, firstGoalScorerPlayerId) =>
-    api.post('/api/predictions/goal-scorers', { matchId, playerIds, firstGoalScorerPlayerId }),
+  predictGoalScorers: (matchId, playerIds, firstGoalScorerPlayerId, playerGoalCounts) =>
+    api.post('/api/predictions/goal-scorers', { matchId, playerIds, firstGoalScorerPlayerId, playerGoalCounts }),
   getGoalScorerPredictions: (matchId) =>
     api.get(`/api/predictions/goal-scorers/match/${matchId}`),
   getAllGoalScorerPredictions: (matchId) =>
     api.get(`/api/predictions/goal-scorers/match/${matchId}/all`),
+  getMotmPredictions: (matchId) =>
+    api.get(`/api/predictions/motm/match/${matchId}`),
 }
 
 // ─── Players ───────────────────────────────────────────
@@ -72,6 +74,7 @@ export const playersAPI = {
 // ─── Leaderboard ───────────────────────────────────────
 export const leaderboardAPI = {
   get: () => api.get('/api/leaderboard'),
+  getBreakdown: (username) => api.get(`/api/leaderboard/breakdown/${encodeURIComponent(username)}`),
 }
 
 // ─── Special Predictions ───────────────────────────────
@@ -86,6 +89,13 @@ export const specialPredictionsAPI = {
     api.post(`/api/predictions/world-cup-winner?teamId=${teamId}`),
   predictMotm: (matchId, playerId) =>
     api.post(`/api/predictions/motm?matchId=${matchId}&playerId=${playerId}`),
+}
+
+// ─── Announcements ─────────────────────────────────────
+export const announcementAPI = {
+  get: () => api.get('/api/announcement'),
+  set: (message) => api.post('/api/announcement', { message }),
+  clear: () => api.delete('/api/announcement'),
 }
 
 // ─── Admin ─────────────────────────────────────────────
@@ -110,6 +120,10 @@ export const adminAPI = {
     api.post(`/api/admin/submit-motm?matchId=${matchId}&playerName=${encodeURIComponent(playerName)}`),
   recalculateAllPoints: () =>
     api.post('/api/admin/recalculate-points'),
+  getUserPredictions: (username) =>
+    api.get(`/api/admin/user-predictions/${encodeURIComponent(username)}`),
+  updatePredictionPoints: (type, predictionId, points) =>
+    api.post(`/api/admin/update-prediction-points?type=${type}&predictionId=${predictionId}&points=${points}`),
   // Invite codes
   generateInviteCode: (label) =>
     api.post(`/api/admin/invite-codes/generate?label=${encodeURIComponent(label || '')}`),

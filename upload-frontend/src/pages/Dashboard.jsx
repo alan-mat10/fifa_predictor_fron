@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { matchesAPI, leaderboardAPI, predictionsAPI } from '../services/api'
+import { matchesAPI, leaderboardAPI, predictionsAPI, announcementAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -8,6 +8,7 @@ export default function Dashboard() {
   const [todayMatches, setTodayMatches] = useState([])
   const [leaderboard, setLeaderboard] = useState([])
   const [myPredictions, setMyPredictions] = useState([])
+  const [announcement, setAnnouncement] = useState(null)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -15,10 +16,11 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [matchesRes, leaderboardRes, predictionsRes] = await Promise.allSettled([
+        const [matchesRes, leaderboardRes, predictionsRes, announcementRes] = await Promise.allSettled([
           matchesAPI.getToday(),
           leaderboardAPI.get(),
           predictionsAPI.getMy(),
+          announcementAPI.get(),
         ])
         if (matchesRes.status === 'fulfilled') {
           setTodayMatches(matchesRes.value.data.map(m => ({
@@ -30,6 +32,9 @@ export default function Dashboard() {
         }
         if (leaderboardRes.status === 'fulfilled') setLeaderboard(leaderboardRes.value.data)
         if (predictionsRes.status === 'fulfilled') setMyPredictions(predictionsRes.value.data)
+        if (announcementRes.status === 'fulfilled' && announcementRes.value.data?.message) {
+          setAnnouncement(announcementRes.value.data.message)
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -55,6 +60,14 @@ export default function Dashboard() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+      {/* Pinned Announcement */}
+      {announcement && (
+        <div className="xl:col-span-12 bg-tertiary/10 border border-tertiary/30 rounded-xl px-5 py-3 flex items-start gap-3">
+          <span className="material-symbols-outlined text-tertiary text-lg mt-0.5">campaign</span>
+          <p className="font-label text-sm text-on-surface flex-1">{announcement}</p>
+        </div>
+      )}
+
       {/* Left Column */}
       <div className="xl:col-span-8 space-y-8">
         {/* Section Header */}

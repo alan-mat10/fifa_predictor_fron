@@ -12,8 +12,8 @@ const navItems = [
 
 const mobileNavItems = [
   { path: '/', icon: 'home', label: 'Home' },
-  { path: '/fixtures', icon: 'event', label: 'Fixtures' },
-  { path: '/predictions', icon: 'add_circle', label: 'Predict', special: true },
+  { path: '/predictions', icon: 'history', label: 'My Picks' },
+  { path: '/fixtures', icon: 'add_circle', label: 'Predict', special: true },
   { path: '/leaderboard', icon: 'military_tech', label: 'Rank' },
   { path: '/rules', icon: 'info', label: 'Rules' },
 ]

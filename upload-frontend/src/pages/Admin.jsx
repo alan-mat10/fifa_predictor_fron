@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
-import { matchesAPI, playersAPI, adminAPI, leaderboardAPI } from '../services/api'
+import { matchesAPI, playersAPI, adminAPI, leaderboardAPI, announcementAPI } from '../services/api'
 import { useToast } from '../components/Toast'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function Admin() {
   const { addToast } = useToast()
   const [matches, setMatches] = useState([])
+  const [pinnedMsg, setPinnedMsg] = useState('')
+  const [currentAnnouncement, setCurrentAnnouncement] = useState('')
   const [loading, setLoading] = useState(true)
 
   // User score management state
@@ -48,10 +50,11 @@ export default function Admin() {
   useEffect(() => {
     async function fetchMatches() {
       try {
-        const [matchRes, codesRes, usersRes] = await Promise.allSettled([
+        const [matchRes, codesRes, usersRes, annRes] = await Promise.allSettled([
           matchesAPI.getAll(),
           adminAPI.getInviteCodes(),
           leaderboardAPI.get(),
+          announcementAPI.get(),
         ])
         if (matchRes.status === 'fulfilled') {
           setMatches(matchRes.value.data.map(m => ({
@@ -62,6 +65,10 @@ export default function Admin() {
         }
         if (codesRes.status === 'fulfilled') setInviteCodes(codesRes.value.data)
         if (usersRes.status === 'fulfilled') setUsers(usersRes.value.data)
+        if (annRes.status === 'fulfilled' && annRes.value.data?.message) {
+          setCurrentAnnouncement(annRes.value.data.message)
+          setPinnedMsg(annRes.value.data.message)
+        }
       } catch (err) {
         console.error(err)
       } finally {
@@ -259,6 +266,64 @@ export default function Admin() {
         <p className="font-label text-sm text-on-surface-variant mt-1">Manage match results and awards</p>
       </div>
 
+      {/* Pinned Announcement */}
+      <div className="bg-surface-container rounded-xl p-6 border border-tertiary/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-tertiary">campaign</span>
+          Pinned Announcement
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Set a message that appears on all users' home screen. Clear to remove it.
+        </p>
+
+        {currentAnnouncement && (
+          <div className="mb-4 p-3 bg-tertiary/10 border border-tertiary/20 rounded-lg flex items-center justify-between">
+            <span className="font-label text-sm text-on-surface">{currentAnnouncement}</span>
+            <button
+              onClick={async () => {
+                try {
+                  await announcementAPI.clear()
+                  setCurrentAnnouncement('')
+                  setPinnedMsg('')
+                  addToast('Announcement cleared', 'success')
+                } catch (err) {
+                  addToast('Failed to clear', 'error')
+                }
+              }}
+              className="material-symbols-outlined text-error text-sm hover:text-error/80 ml-2"
+            >
+              delete
+            </button>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={pinnedMsg}
+            onChange={(e) => setPinnedMsg(e.target.value)}
+            placeholder="Type announcement message..."
+            className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
+          />
+          <button
+            onClick={async () => {
+              if (!pinnedMsg.trim()) return
+              try {
+                await announcementAPI.set(pinnedMsg.trim())
+                setCurrentAnnouncement(pinnedMsg.trim())
+                addToast('Announcement set', 'success')
+              } catch (err) {
+                addToast('Failed to set announcement', 'error')
+              }
+            }}
+            disabled={!pinnedMsg.trim()}
+            className="px-5 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
+          >
+            PIN
+          </button>
+        </div>
+      </div>
+
       {/* Pull Results from API */}
       <div className="bg-surface-container rounded-xl p-6 border border-secondary/30 shadow-[0_0_16px_rgba(0,255,204,0.1)]">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
@@ -402,10 +467,9 @@ export default function Admin() {
                     <button
                       key={player.id}
                       onClick={() => {
-                        if (!gsSelectedPlayers.find(p => p.id === player.id)) {
-                          setGsSelectedPlayers([...gsSelectedPlayers, player])
-                          if (gsSelectedPlayers.length === 0) setGsFirstScorerId(player.id)
-                        }
+                        // Allow same player multiple times (for multiple goals)
+                        setGsSelectedPlayers([...gsSelectedPlayers, { ...player, _key: Date.now() }])
+                        if (gsSelectedPlayers.length === 0) setGsFirstScorerId(player.id)
                         setGsPlayerSearch('')
                         setGsPlayerResults([])
                       }}
@@ -420,9 +484,9 @@ export default function Admin() {
 
               {gsSelectedPlayers.length > 0 && (
                 <div className="space-y-2">
-                  <p className="font-label text-[10px] text-on-surface-variant uppercase">Selected (star = first scorer)</p>
-                  {gsSelectedPlayers.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between px-3 py-2 bg-surface-variant rounded-lg border border-outline-variant">
+                  <p className="font-label text-[10px] text-on-surface-variant uppercase">Selected (star = first scorer) — add same player multiple times for multiple goals</p>
+                  {gsSelectedPlayers.map((p, idx) => (
+                    <div key={p._key || `${p.id}-${idx}`} className="flex items-center justify-between px-3 py-2 bg-surface-variant rounded-lg border border-outline-variant">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setGsFirstScorerId(p.id)}
@@ -432,10 +496,13 @@ export default function Admin() {
                           star
                         </button>
                         <span className="font-label text-sm">{p.name}</span>
+                        <span className="font-label text-[10px] text-on-surface-variant">⚽</span>
                       </div>
                       <button onClick={() => {
-                        setGsSelectedPlayers(gsSelectedPlayers.filter(x => x.id !== p.id))
-                        if (gsFirstScorerId === p.id) setGsFirstScorerId(null)
+                        const updated = [...gsSelectedPlayers]
+                        updated.splice(idx, 1)
+                        setGsSelectedPlayers(updated)
+                        if (gsFirstScorerId === p.id && !updated.find(x => x.id === p.id)) setGsFirstScorerId(null)
                       }} className="material-symbols-outlined text-error text-sm">close</button>
                     </div>
                   ))}
