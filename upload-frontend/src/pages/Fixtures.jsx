@@ -50,16 +50,23 @@ export default function Fixtures() {
     return result
   }, [matches, filter, search])
 
+  const [section, setSection] = useState('UPCOMING')
+
+  const sectionedMatches = useMemo(() => {
+    if (section === 'COMPLETED') return filteredMatches.filter(m => m.status === 'COMPLETED')
+    return filteredMatches.filter(m => m.status !== 'COMPLETED')
+  }, [filteredMatches, section])
+
   // Group by date
   const groupedByDate = useMemo(() => {
     const groups = {}
-    filteredMatches.forEach((m) => {
+    sectionedMatches.forEach((m) => {
       const date = m.matchTime ? new Date(m.matchTime).toLocaleDateString('en-IN', { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' }) : 'TBD'
       if (!groups[date]) groups[date] = []
       groups[date].push(m)
     })
     return groups
-  }, [filteredMatches])
+  }, [sectionedMatches])
 
   const formatTime = (dateStr) => {
     if (!dateStr) return 'TBD'
@@ -90,6 +97,30 @@ export default function Fixtures() {
           placeholder="Search team..."
           className="w-full bg-surface-container border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label pl-10 pr-4 py-3 rounded-lg transition-all"
         />
+      </div>
+
+      {/* Section Toggle */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setSection('UPCOMING')}
+          className={`flex-1 py-2.5 rounded font-label text-xs uppercase tracking-wider transition-all ${
+            section === 'UPCOMING'
+              ? 'bg-secondary/20 text-secondary border border-secondary/30'
+              : 'bg-surface-container text-on-surface-variant border border-outline-variant hover:border-secondary/50'
+          }`}
+        >
+          Upcoming ({filteredMatches.filter(m => m.status !== 'COMPLETED').length})
+        </button>
+        <button
+          onClick={() => setSection('COMPLETED')}
+          className={`flex-1 py-2.5 rounded font-label text-xs uppercase tracking-wider transition-all ${
+            section === 'COMPLETED'
+              ? 'bg-primary/20 text-primary border border-primary/30'
+              : 'bg-surface-container text-on-surface-variant border border-outline-variant hover:border-primary/50'
+          }`}
+        >
+          Completed ({filteredMatches.filter(m => m.status === 'COMPLETED').length})
+        </button>
       </div>
 
       {/* Filter Tabs */}
