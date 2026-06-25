@@ -19,7 +19,7 @@ jobs:
           script: |
             set -e
 
-            cd /home/ubuntu/fifa_predictor_frontend/upload-frontend
+            cd /home/ubuntu/fifa_predictor_fron/upload-frontend
 
             echo "Pulling latest code..."
             git pull origin main
