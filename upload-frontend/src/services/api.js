@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8085',
 })
 
 // Request interceptor — attach JWT token
@@ -45,6 +45,8 @@ export const matchesAPI = {
   getByGroup: (group) => api.get(`/api/matches/group/${group}`),
   getByStage: (stage) => api.get(`/api/matches/stage/${stage}`),
   getScorers: (matchId) => api.get(`/api/matches/${matchId}/scorers`),
+  getStandings: () => api.get('/api/matches/standings'),
+  getStandingsByGroup: (group) => api.get(`/api/matches/standings/${group}`),
 }
 
 // ─── Predictions ───────────────────────────────────────
