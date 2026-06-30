@@ -13,10 +13,24 @@ export default function Rules() {
           Per Match Predictions
         </h3>
         <div className="space-y-3">
-          <PointRow icon="check_circle" color="secondary" points="+1" label="Correct Match Result" desc="Predict win/draw/loss correctly" />
-          <PointRow icon="scoreboard" color="primary" points="+2" label="Exact Score" desc="Predict the exact scoreline (bonus on top of match result = +3 total)" />
-          <PointRow icon="person" color="secondary" points="+2" label="Goal Scorer" desc="Per correct player × number of goals they score (e.g., 2 goals = +4)" />
+          <PointRow icon="check_circle" color="secondary" points="+1" label="Correct Match Result" desc="Predict win/draw/loss correctly (group stage & knockout non-penalty)" />
+          <PointRow icon="scoreboard" color="primary" points="+2" label="Exact Score" desc="Predict the exact scoreline (bonus on top of result/penalty winner)" />
+          <PointRow icon="gavel" color="tertiary" points="+1" label="Correct Penalty Winner (Knockout)" desc="In knockout, if match goes to pens: +1 replaces 'correct result' point" />
+          <PointRow icon="person" color="secondary" points="+2" label="Correct Goal Scorer" desc="Per correct player × predicted goals (e.g., predict 2 goals, scores 2 = +4)" />
+          <PointRow icon="person_off" color="error" points="-2" label="Wrong Goal Scorer" desc="Per incorrect predicted goal (e.g., predict 1 goal, scores 0 = -2)" />
           <PointRow icon="star" color="tertiary" points="+3" label="Man of the Match" desc="Predict the official MOTM correctly" />
+        </div>
+
+        {/* Knockout Scoring Detail */}
+        <div className="mt-4 p-4 bg-tertiary/5 border border-tertiary/20 rounded-lg">
+          <p className="font-label text-xs font-bold text-tertiary mb-2">⚽ Knockout Penalty Scoring</p>
+          <div className="font-label text-[10px] text-on-surface-variant space-y-1">
+            <p>• Score = goals in 90 min + extra time (not penalty shootout)</p>
+            <p>• If you predict a draw, you must pick the penalty winner</p>
+            <p>• Correct penalty winner = <strong className="text-secondary">+1</strong> (replaces the normal "correct result" point)</p>
+            <p>• Exact score bonus still applies = <strong className="text-primary">+2</strong></p>
+            <p>• Example: Predict 1-1 + Team A wins pens → Result is 1-1 + Team A wins → <strong className="text-on-surface">+1 (pen winner) + 2 (exact) = 3 pts</strong></p>
+          </div>
         </div>
       </div>
 
@@ -27,7 +41,7 @@ export default function Rules() {
           Tournament Predictions
         </h3>
         <div className="space-y-3">
-          <PointRow icon="trophy" color="tertiary" points="+5" label="World Cup Winner" desc="Predict the winning team (locks after group stage — June 27)" />
+          <PointRow icon="trophy" color="tertiary" points="+5" label="World Cup Winner" desc="Predict the winning team" />
           <PointRow icon="sports_soccer" color="primary" points="+4" label="Golden Boot" desc="Predict the tournament's top goal scorer" />
           <PointRow icon="emoji_events" color="secondary" points="+4" label="Golden Ball" desc="Predict the best player of the tournament" />
           <PointRow icon="sports_handball" color="secondary" points="+4" label="Golden Glove" desc="Predict the best goalkeeper of the tournament" />
@@ -55,7 +69,7 @@ export default function Rules() {
           </div>
           <div className="flex items-start gap-3">
             <span className="material-symbols-outlined text-tertiary text-lg mt-0.5">block</span>
-            <p><strong className="text-on-surface">World Cup Winner locks June 27.</strong> You cannot change your winner pick after the group stage ends.</p>
+            <p><strong className="text-on-surface">Tournament predictions lock.</strong> Admin sets a lock date — after that you cannot change winner/golden boot/ball/glove picks.</p>
           </div>
         </div>
       </div>
@@ -69,15 +83,15 @@ export default function Rules() {
         <div className="bg-surface-dim rounded-lg p-4 font-label text-xs space-y-2">
           <p className="text-on-surface-variant">Match: Mexico 2 - 0 South Africa</p>
           <p className="text-on-surface-variant">Your prediction: 2 - 0 ✅</p>
-          <p className="text-on-surface-variant">Your goal scorers: Julián Quiñones ×2 ✅ (scored 2), Santiago Giménez ❌</p>
+          <p className="text-on-surface-variant">Your goal scorers: Julián Quiñones ×2 ✅ (scored 2), Santiago Giménez ×1 ❌ (scored 0)</p>
           <p className="text-on-surface-variant">Your MOTM: Julián Quiñones ✅</p>
           <div className="border-t border-outline-variant pt-2 mt-2 space-y-1">
             <p className="text-secondary">+ 1 (correct result)</p>
             <p className="text-primary">+ 2 (exact score)</p>
-            <p className="text-secondary">+ 4 (Quiñones scored 2 goals × 2pts)</p>
-            <p className="text-on-surface-variant">+ 0 (Giménez didn't score)</p>
+            <p className="text-secondary">+ 4 (Quiñones predicted 2, scored 2 → 2×+2)</p>
+            <p className="text-error">- 2 (Giménez predicted 1, scored 0 → 1×-2)</p>
             <p className="text-tertiary">+ 3 (correct MOTM)</p>
-            <p className="text-on-surface font-bold border-t border-outline-variant pt-1 mt-1">= 10 points total for this match</p>
+            <p className="text-on-surface font-bold border-t border-outline-variant pt-1 mt-1">= 8 points total for this match</p>
           </div>
         </div>
       </div>

@@ -124,8 +124,11 @@ export default function TournamentPredictions() {
       <div className="bg-tertiary/10 border border-tertiary/30 rounded-xl p-4 flex items-center gap-3">
         <span className="material-symbols-outlined text-tertiary">info</span>
         <p className="font-label text-xs text-on-tertiary-container">
-          World Cup Winner: <strong>+5 pts</strong> (locks after group stage) •
-          Top Scorer / Golden Ball / Golden Glove: <strong>+4 pts</strong> each
+          {tournamentLocked
+            ? '🔒 Tournament predictions are locked.'
+            : lockTime
+              ? `Predictions lock: ${new Date(lockTime).toLocaleString('en-IN', {timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}`
+              : 'Predictions are open.'}
         </p>
       </div>
 
@@ -178,6 +181,7 @@ export default function TournamentPredictions() {
         searchPlayers={searchPlayers}
         onSubmit={handleTopScorerSubmit}
         submitting={topScorerSubmitting}
+        locked={tournamentLocked}
       />
 
       {/* Golden Ball */}
@@ -196,6 +200,7 @@ export default function TournamentPredictions() {
         searchPlayers={searchPlayers}
         onSubmit={handleGoldenBallSubmit}
         submitting={goldenBallSubmitting}
+        locked={tournamentLocked}
       />
 
       {/* Golden Glove */}
@@ -214,12 +219,13 @@ export default function TournamentPredictions() {
         searchPlayers={searchPlayers}
         onSubmit={handleGoldenGloveSubmit}
         submitting={goldenGloveSubmitting}
+        locked={tournamentLocked}
       />
     </div>
   )
 }
 
-function PlayerPredictionCard({ title, subtitle, points, icon, color, pick, setPick, search, setSearch, results, setResults, searchPlayers, onSubmit, submitting }) {
+function PlayerPredictionCard({ title, subtitle, points, icon, color, pick, setPick, search, setSearch, results, setResults, searchPlayers, onSubmit, submitting, locked }) {
   const borderClass = color === 'primary' ? 'primary-glow-border' : 'card-glow'
   const accentColor = color === 'primary' ? 'primary' : color === 'secondary' ? 'secondary' : 'tertiary'
 
@@ -277,10 +283,10 @@ function PlayerPredictionCard({ title, subtitle, points, icon, color, pick, setP
       )}
       <button
         onClick={onSubmit}
-        disabled={!pick || submitting}
+        disabled={!pick || submitting || locked}
         className={`w-full py-3 ${color === 'primary' ? 'btn-solid-primary' : 'btn-neon-secondary'} rounded disabled:opacity-30`}
       >
-        {submitting ? 'SAVING...' : `SAVE ${title.toUpperCase()} PICK`}
+        {submitting ? 'SAVING...' : locked ? '🔒 PREDICTIONS LOCKED' : `SAVE ${title.toUpperCase()} PICK`}
       </button>
     </div>
   )

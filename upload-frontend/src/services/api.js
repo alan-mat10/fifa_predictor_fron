@@ -51,8 +51,8 @@ export const matchesAPI = {
 
 // ─── Predictions ───────────────────────────────────────
 export const predictionsAPI = {
-  make: (matchId, predictedTeam1Score, predictedTeam2Score) =>
-    api.post('/api/predictions', { matchId, predictedTeam1Score, predictedTeam2Score }),
+  make: (matchId, predictedTeam1Score, predictedTeam2Score, penaltyWinnerTeamId) =>
+    api.post('/api/predictions', { matchId, predictedTeam1Score, predictedTeam2Score, penaltyWinnerTeamId }),
   getMy: () => api.get('/api/predictions/my'),
   getForMatch: (matchId) => api.get(`/api/predictions/match/${matchId}`),
   getMyTournament: () => api.get('/api/predictions/tournament'),

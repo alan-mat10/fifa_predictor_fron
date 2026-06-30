@@ -189,7 +189,7 @@ export default function Fixtures() {
                           <span className="font-headline font-extrabold text-sm text-on-surface">{match.team1Score} - {match.team2Score}</span>
                           {match.team1PenaltyScore != null && match.team2PenaltyScore != null && (
                             <div className="font-label text-[9px] text-tertiary mt-0.5">
-                              (Pens: {match.team1PenaltyScore} - {match.team2PenaltyScore})
+                              Pens: {match.team1PenaltyScore} - {match.team2PenaltyScore}
                             </div>
                           )}
                         </div>
