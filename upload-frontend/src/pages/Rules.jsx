@@ -13,12 +13,24 @@ export default function Rules() {
           Per Match Predictions
         </h3>
         <div className="space-y-3">
-          <PointRow icon="check_circle" color="secondary" points="+1" label="Correct Match Result" desc="Predict win/draw/loss correctly" />
-          <PointRow icon="scoreboard" color="primary" points="+2" label="Exact Score" desc="Predict the exact scoreline (bonus on top of match result = +3 total)" />
-          <PointRow icon="gavel" color="tertiary" points="+1" label="Penalty Winner (Knockout)" desc="Predict which team wins on penalties when you predict a draw" />
+          <PointRow icon="check_circle" color="secondary" points="+1" label="Correct Match Result" desc="Predict win/draw/loss correctly (group stage & knockout non-penalty)" />
+          <PointRow icon="scoreboard" color="primary" points="+2" label="Exact Score" desc="Predict the exact scoreline (bonus on top of result/penalty winner)" />
+          <PointRow icon="gavel" color="tertiary" points="+1" label="Correct Penalty Winner (Knockout)" desc="In knockout, if match goes to pens: +1 replaces 'correct result' point" />
           <PointRow icon="person" color="secondary" points="+2" label="Correct Goal Scorer" desc="Per correct player × predicted goals (e.g., predict 2 goals, scores 2 = +4)" />
           <PointRow icon="person_off" color="error" points="-2" label="Wrong Goal Scorer" desc="Per incorrect predicted goal (e.g., predict 1 goal, scores 0 = -2)" />
           <PointRow icon="star" color="tertiary" points="+3" label="Man of the Match" desc="Predict the official MOTM correctly" />
+        </div>
+
+        {/* Knockout Scoring Detail */}
+        <div className="mt-4 p-4 bg-tertiary/5 border border-tertiary/20 rounded-lg">
+          <p className="font-label text-xs font-bold text-tertiary mb-2">⚽ Knockout Penalty Scoring</p>
+          <div className="font-label text-[10px] text-on-surface-variant space-y-1">
+            <p>• Score = goals in 90 min + extra time (not penalty shootout)</p>
+            <p>• If you predict a draw, you must pick the penalty winner</p>
+            <p>• Correct penalty winner = <strong className="text-secondary">+1</strong> (replaces the normal "correct result" point)</p>
+            <p>• Exact score bonus still applies = <strong className="text-primary">+2</strong></p>
+            <p>• Example: Predict 1-1 + Team A wins pens → Result is 1-1 + Team A wins → <strong className="text-on-surface">+1 (pen winner) + 2 (exact) = 3 pts</strong></p>
+          </div>
         </div>
       </div>
 

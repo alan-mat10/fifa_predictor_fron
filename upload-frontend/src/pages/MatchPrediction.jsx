@@ -92,7 +92,6 @@ export default function MatchPrediction() {
   }
 
   const handleSubmitGoalScorers = async () => {
-    if (selectedScorers.length === 0) return
     setSubmitting(true)
     try {
       const playerGoalCounts = {}
@@ -103,8 +102,13 @@ export default function MatchPrediction() {
         firstScorerId,
         playerGoalCounts
       )
-      addToast('Goal scorer prediction saved', 'success')
-      setHasExistingScorers(true)
+      if (selectedScorers.length === 0) {
+        addToast('Goal scorer predictions cleared', 'success')
+        setHasExistingScorers(false)
+      } else {
+        addToast('Goal scorer prediction saved', 'success')
+        setHasExistingScorers(true)
+      }
     } catch (err) {
       addToast(err.response?.data?.error || err.response?.data?.message || 'Failed to save goal scorers', 'error')
     } finally {
@@ -435,10 +439,10 @@ export default function MatchPrediction() {
 
         <button
           onClick={handleSubmitGoalScorers}
-          disabled={submitting || selectedScorers.length === 0}
+          disabled={submitting || (!hasExistingScorers && selectedScorers.length === 0)}
           className="w-full py-3 btn-neon-secondary rounded disabled:opacity-30"
         >
-          {submitting ? 'SAVING...' : hasExistingScorers ? 'UPDATE GOAL SCORERS' : 'SAVE GOAL SCORERS'}
+          {submitting ? 'SAVING...' : hasExistingScorers && selectedScorers.length === 0 ? 'CLEAR ALL GOAL SCORERS' : hasExistingScorers ? 'UPDATE GOAL SCORERS' : 'SAVE GOAL SCORERS'}
         </button>
       </div>
       )}
