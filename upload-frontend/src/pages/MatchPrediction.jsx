@@ -15,6 +15,7 @@ export default function MatchPrediction() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [existingPrediction, setExistingPrediction] = useState(null)
+  const [penaltyWinnerTeamId, setPenaltyWinnerTeamId] = useState(null)
 
   // Team players state
   const [team1Players, setTeam1Players] = useState([])
@@ -53,6 +54,7 @@ export default function MatchPrediction() {
           setExistingPrediction(myPred)
           setTeam1Score(myPred.predictedTeam1Score || 0)
           setTeam2Score(myPred.predictedTeam2Score || 0)
+          setPenaltyWinnerTeamId(myPred.penaltyWinnerTeamId || null)
         }
         // Load existing goal scorer predictions
         const gsRes = await predictionsAPI.getGoalScorerPredictions(matchId)
@@ -80,7 +82,7 @@ export default function MatchPrediction() {
   const handleSubmitScore = async () => {
     setSubmitting(true)
     try {
-      await predictionsAPI.make(Number(matchId), team1Score, team2Score)
+      await predictionsAPI.make(Number(matchId), team1Score, team2Score, penaltyWinnerTeamId)
       addToast('Score prediction saved', 'success')
     } catch (err) {
       addToast(err.response?.data?.error || err.response?.data?.message || 'Failed to save prediction', 'error')
@@ -303,9 +305,42 @@ export default function MatchPrediction() {
             </div>
           </div>
         </div>
+
+        {/* Penalty Winner Picker — shown for knockout matches when predicted score is a draw */}
+        {match.stage !== 'GROUP' && team1Score === team2Score && (
+          <div className="mt-6 p-4 bg-tertiary/10 border border-tertiary/30 rounded-lg">
+            <p className="font-label text-xs text-tertiary font-bold mb-1">⚽ Penalty Shootout Winner</p>
+            <p className="font-label text-[10px] text-on-surface-variant mb-3">
+              Score above = goals in 90 min + extra time. Pick who wins on penalties:
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPenaltyWinnerTeamId(match.team1Id)}
+                className={`flex-1 py-2.5 rounded font-label text-xs tracking-wider transition-all ${
+                  penaltyWinnerTeamId === match.team1Id
+                    ? 'bg-tertiary/20 text-tertiary border-2 border-tertiary'
+                    : 'bg-surface-dim border border-outline-variant text-on-surface-variant hover:border-tertiary/50'
+                }`}
+              >
+                {match.team1}
+              </button>
+              <button
+                onClick={() => setPenaltyWinnerTeamId(match.team2Id)}
+                className={`flex-1 py-2.5 rounded font-label text-xs tracking-wider transition-all ${
+                  penaltyWinnerTeamId === match.team2Id
+                    ? 'bg-tertiary/20 text-tertiary border-2 border-tertiary'
+                    : 'bg-surface-dim border border-outline-variant text-on-surface-variant hover:border-tertiary/50'
+                }`}
+              >
+                {match.team2}
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleSubmitScore}
-          disabled={submitting}
+          disabled={submitting || (match.stage !== 'GROUP' && team1Score === team2Score && !penaltyWinnerTeamId)}
           className="w-full mt-6 py-3 btn-solid-primary rounded disabled:opacity-50"
         >
           {submitting ? 'SAVING...' : existingPrediction ? 'UPDATE PREDICTION' : 'SUBMIT PREDICTION'}

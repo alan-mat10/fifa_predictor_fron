@@ -68,6 +68,14 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Fair Play Warning */}
+      <div className="xl:col-span-12 bg-error/5 border border-error/20 rounded-xl px-5 py-3 flex items-start gap-3">
+        <span className="material-symbols-outlined text-error text-lg mt-0.5">gavel</span>
+        <p className="font-label text-xs text-on-surface-variant flex-1">
+          <strong className="text-error">Fair Play:</strong> Any player found violating the spirit of the game — exploiting bugs, manipulating scores, or gaining unfair advantages by any means — will be disqualified from the match result or from the tournament itself.
+        </p>
+      </div>
+
       {/* Left Column */}
       <div className="xl:col-span-8 space-y-8">
         {/* Section Header */}
