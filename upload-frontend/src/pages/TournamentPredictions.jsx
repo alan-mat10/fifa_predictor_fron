@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { playersAPI, specialPredictionsAPI, matchesAPI } from '../services/api'
+import { playersAPI, specialPredictionsAPI, matchesAPI, predictionsAPI } from '../services/api'
 import { useToast } from '../components/Toast'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -7,6 +7,8 @@ export default function TournamentPredictions() {
   const { addToast } = useToast()
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
+  const [tournamentLocked, setTournamentLocked] = useState(false)
+  const [lockTime, setLockTime] = useState('')
 
   // World Cup Winner
   const [winnerTeamId, setWinnerTeamId] = useState('')
@@ -33,7 +35,10 @@ export default function TournamentPredictions() {
   useEffect(() => {
     async function fetchTeams() {
       try {
-        const res = await matchesAPI.getAll()
+        const [res, lockRes] = await Promise.all([
+          matchesAPI.getAll(),
+          predictionsAPI.getTournamentLockStatus()
+        ])
         // Extract unique teams from matches
         const teamMap = new Map()
         res.data.forEach(m => {
@@ -41,6 +46,8 @@ export default function TournamentPredictions() {
           if (m.team2Id && m.team2Name) teamMap.set(m.team2Id, { id: m.team2Id, name: m.team2Name, flag: m.team2Flag })
         })
         setTeams([...teamMap.values()].sort((a, b) => a.name.localeCompare(b.name)))
+        setTournamentLocked(lockRes.data.locked)
+        setLockTime(lockRes.data.lockTime || '')
       } catch (err) {
         console.error(err)
       } finally {
@@ -104,7 +111,7 @@ export default function TournamentPredictions() {
 
   if (loading) return <LoadingSpinner text="Loading..." />
 
-  const isGroupStageLocked = new Date() > new Date('2026-06-27T23:59:00')
+  const isGroupStageLocked = tournamentLocked
 
   return (
     <div className="space-y-8 max-w-3xl mx-auto">
@@ -130,7 +137,7 @@ export default function TournamentPredictions() {
           </div>
           <div>
             <h3 className="font-headline font-bold text-lg text-tertiary">World Cup Winner</h3>
-            <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">+5 points • {isGroupStageLocked ? 'LOCKED' : 'Locks after June 27'}</p>
+            <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">+5 points • {isGroupStageLocked ? 'LOCKED' : lockTime ? `Locks: ${new Date(lockTime).toLocaleString('en-IN', {timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}` : 'Open'}</p>
           </div>
         </div>
 
@@ -151,7 +158,7 @@ export default function TournamentPredictions() {
           disabled={!winnerTeamId || winnerSubmitting || isGroupStageLocked}
           className="w-full py-3 bg-tertiary/20 border border-tertiary/50 text-tertiary font-headline font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
         >
-          {winnerSubmitting ? 'SAVING...' : isGroupStageLocked ? 'LOCKED AFTER GROUP STAGE' : 'SAVE WINNER PICK'}
+          {winnerSubmitting ? 'SAVING...' : isGroupStageLocked ? 'PREDICTIONS LOCKED' : 'SAVE WINNER PICK'}
         </button>
       </div>
 

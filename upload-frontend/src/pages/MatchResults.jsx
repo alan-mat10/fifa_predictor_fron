@@ -79,6 +79,11 @@ export default function MatchResults() {
             <span className="text-4xl font-headline font-extrabold text-primary neon-glow-primary">
               {match.team1Score} - {match.team2Score}
             </span>
+            {match.team1PenaltyScore != null && match.team2PenaltyScore != null && (
+              <div className="font-label text-xs text-tertiary mt-1">
+                (Penalties: {match.team1PenaltyScore} - {match.team2PenaltyScore})
+              </div>
+            )}
           </div>
           <div className="text-center">
             <div className="w-14 h-14 rounded-full bg-surface-variant flex items-center justify-center border border-outline mb-2 mx-auto overflow-hidden">

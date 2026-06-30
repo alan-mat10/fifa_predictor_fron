@@ -56,6 +56,7 @@ export const predictionsAPI = {
   getMy: () => api.get('/api/predictions/my'),
   getForMatch: (matchId) => api.get(`/api/predictions/match/${matchId}`),
   getMyTournament: () => api.get('/api/predictions/tournament'),
+  getTournamentLockStatus: () => api.get('/api/predictions/tournament-lock-status'),
   predictGoalScorers: (matchId, playerIds, firstGoalScorerPlayerId, playerGoalCounts) =>
     api.post('/api/predictions/goal-scorers', { matchId, playerIds, firstGoalScorerPlayerId, playerGoalCounts }),
   getGoalScorerPredictions: (matchId) =>
@@ -135,6 +136,15 @@ export const adminAPI = {
     api.get('/api/admin/invite-codes'),
   deleteInviteCode: (id) =>
     api.delete(`/api/admin/invite-codes/${id}`),
+  // Tournament lock settings
+  getTournamentSettings: () =>
+    api.get('/api/admin/tournament-settings'),
+  setTournamentLockTime: (lockTime) =>
+    api.post(`/api/admin/tournament-settings/set-lock-time?lockTime=${encodeURIComponent(lockTime)}`),
+  lockTournamentPredictions: () =>
+    api.post('/api/admin/tournament-settings/lock-now'),
+  unlockTournamentPredictions: () =>
+    api.post('/api/admin/tournament-settings/unlock'),
 }
 
 export default api
