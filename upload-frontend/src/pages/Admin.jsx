@@ -47,14 +47,21 @@ export default function Admin() {
   const [newCodeLabel, setNewCodeLabel] = useState('')
   const [codeGenerating, setCodeGenerating] = useState(false)
 
+  // Tournament lock state
+  const [tournamentLockTime, setTournamentLockTime] = useState('')
+  const [tournamentLocked, setTournamentLocked] = useState(false)
+  const [isCurrentlyLocked, setIsCurrentlyLocked] = useState(false)
+  const [lockLoading, setLockLoading] = useState(false)
+
   useEffect(() => {
     async function fetchMatches() {
       try {
-        const [matchRes, codesRes, usersRes, annRes] = await Promise.allSettled([
+        const [matchRes, codesRes, usersRes, annRes, lockRes] = await Promise.allSettled([
           matchesAPI.getAll(),
           adminAPI.getInviteCodes(),
           leaderboardAPI.get(),
           announcementAPI.get(),
+          adminAPI.getTournamentSettings(),
         ])
         if (matchRes.status === 'fulfilled') {
           setMatches(matchRes.value.data.map(m => ({
@@ -68,6 +75,11 @@ export default function Admin() {
         if (annRes.status === 'fulfilled' && annRes.value.data?.message) {
           setCurrentAnnouncement(annRes.value.data.message)
           setPinnedMsg(annRes.value.data.message)
+        }
+        if (lockRes.status === 'fulfilled') {
+          setTournamentLockTime(lockRes.value.data.tournamentPredictionLockTime || '')
+          setTournamentLocked(lockRes.value.data.tournamentPredictionsLocked)
+          setIsCurrentlyLocked(lockRes.value.data.isCurrentlyLocked)
         }
       } catch (err) {
         console.error(err)
@@ -663,6 +675,101 @@ export default function Admin() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Tournament Prediction Lock */}
+      <div className="bg-surface-container rounded-xl p-6 border border-tertiary/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-tertiary">lock_clock</span>
+          Tournament Prediction Lock
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Control when users can no longer submit tournament predictions (Winner, Golden Boot, Ball, Glove).
+        </p>
+
+        {/* Status */}
+        <div className={`mb-4 p-3 rounded-lg border ${isCurrentlyLocked ? 'bg-error/10 border-error/30' : 'bg-secondary/10 border-secondary/30'}`}>
+          <span className={`font-label text-xs font-bold ${isCurrentlyLocked ? 'text-error' : 'text-secondary'}`}>
+            Status: {isCurrentlyLocked ? '🔒 LOCKED' : '🔓 OPEN'}
+          </span>
+          {tournamentLockTime && !tournamentLocked && (
+            <span className="font-label text-[10px] text-on-surface-variant ml-2">
+              (Auto-locks: {new Date(tournamentLockTime).toLocaleString('en-IN', {timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})})
+            </span>
+          )}
+          {tournamentLocked && (
+            <span className="font-label text-[10px] text-on-surface-variant ml-2">(Manually locked)</span>
+          )}
+        </div>
+
+        {/* Set Lock Time */}
+        <div className="flex gap-2 mb-4">
+          <input
+            type="datetime-local"
+            value={tournamentLockTime ? tournamentLockTime.substring(0, 16) : ''}
+            onChange={(e) => setTournamentLockTime(e.target.value)}
+            className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-xs px-3 py-2 rounded-lg"
+          />
+          <button
+            onClick={async () => {
+              if (!tournamentLockTime) return
+              setLockLoading(true)
+              try {
+                await adminAPI.setTournamentLockTime(tournamentLockTime)
+                const res = await adminAPI.getTournamentSettings()
+                setTournamentLockTime(res.data.tournamentPredictionLockTime || '')
+                setTournamentLocked(res.data.tournamentPredictionsLocked)
+                setIsCurrentlyLocked(res.data.isCurrentlyLocked)
+                addToast('Lock time updated', 'success')
+              } catch (err) {
+                addToast('Failed to set lock time', 'error')
+              } finally { setLockLoading(false) }
+            }}
+            disabled={lockLoading || !tournamentLockTime}
+            className="px-4 py-2 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label text-xs rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
+          >
+            Set Time
+          </button>
+        </div>
+
+        {/* Lock/Unlock Buttons */}
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              setLockLoading(true)
+              try {
+                await adminAPI.lockTournamentPredictions()
+                setTournamentLocked(true)
+                setIsCurrentlyLocked(true)
+                addToast('Tournament predictions locked!', 'success')
+              } catch (err) {
+                addToast('Failed to lock', 'error')
+              } finally { setLockLoading(false) }
+            }}
+            disabled={lockLoading || isCurrentlyLocked}
+            className="flex-1 py-2.5 bg-error/20 border border-error/50 text-error font-label text-xs tracking-widest rounded hover:bg-error/30 transition-all disabled:opacity-30"
+          >
+            🔒 LOCK NOW
+          </button>
+          <button
+            onClick={async () => {
+              setLockLoading(true)
+              try {
+                await adminAPI.unlockTournamentPredictions()
+                setTournamentLocked(false)
+                const res = await adminAPI.getTournamentSettings()
+                setIsCurrentlyLocked(res.data.isCurrentlyLocked)
+                addToast('Tournament predictions unlocked', 'success')
+              } catch (err) {
+                addToast('Failed to unlock', 'error')
+              } finally { setLockLoading(false) }
+            }}
+            disabled={lockLoading || !isCurrentlyLocked}
+            className="flex-1 py-2.5 bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs tracking-widest rounded hover:bg-secondary/30 transition-all disabled:opacity-30"
+          >
+            🔓 UNLOCK
+          </button>
         </div>
       </div>
 
