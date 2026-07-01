@@ -55,16 +55,12 @@ export default function Dashboard() {
 
     // Check notification status
     async function checkNotifications() {
-      if (!('Notification' in window)) {
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
         setNotifStatus('unsupported')
       } else if (Notification.permission === 'granted') {
-        const sub = await isSubscribed()
-        setNotifStatus(sub ? 'granted' : 'prompt')
-        if (!sub) {
-          // Auto-subscribe if permission already granted
-          await requestNotificationPermission()
-          setNotifStatus('granted')
-        }
+        setNotifStatus('granted')
+        // Auto-subscribe in background
+        requestNotificationPermission().catch(() => {})
       } else if (Notification.permission === 'denied') {
         setNotifStatus('denied')
       } else {

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
+const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
 async function chatFetch(path, options = {}) {
   const token = localStorage.getItem('token')
-  const res = await fetch(`${API_BASE}/api/chat${path}`, {
+  const res = await fetch(`${BASE_URL}/api/chat${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -13,7 +13,9 @@ async function chatFetch(path, options = {}) {
       ...options.headers,
     },
   })
-  return res.json()
+  if (!res.ok) throw new Error(`${res.status}`)
+  const text = await res.text()
+  return text ? JSON.parse(text) : []
 }
 
 export default function ChatBubble() {
