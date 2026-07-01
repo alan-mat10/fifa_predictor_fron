@@ -54,6 +54,7 @@ export const predictionsAPI = {
   make: (matchId, predictedTeam1Score, predictedTeam2Score, penaltyWinnerTeamId) =>
     api.post('/api/predictions', { matchId, predictedTeam1Score, predictedTeam2Score, penaltyWinnerTeamId }),
   getMy: () => api.get('/api/predictions/my'),
+  getByUser: (username) => api.get(`/api/predictions/user/${encodeURIComponent(username)}`),
   getForMatch: (matchId) => api.get(`/api/predictions/match/${matchId}`),
   getMyTournament: () => api.get('/api/predictions/tournament'),
   getTournamentLockStatus: () => api.get('/api/predictions/tournament-lock-status'),
@@ -92,6 +93,10 @@ export const specialPredictionsAPI = {
     api.post(`/api/predictions/world-cup-winner?teamId=${teamId}`),
   predictMotm: (matchId, playerId) =>
     api.post(`/api/predictions/motm?matchId=${matchId}&playerId=${playerId}`),
+  getMyMotm: (matchId) =>
+    api.get(`/api/predictions/motm/my/${matchId}`),
+  getAllMyMotm: () =>
+    api.get('/api/predictions/motm/my-all'),
 }
 
 // ─── Announcements ─────────────────────────────────────

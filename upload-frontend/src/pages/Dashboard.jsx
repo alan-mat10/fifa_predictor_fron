@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { matchesAPI, leaderboardAPI, predictionsAPI, announcementAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { requestNotificationPermission, isSubscribed } from '../utils/pushNotifications'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function Dashboard() {
   const [todayMatches, setTodayMatches] = useState([])
+  const [notifStatus, setNotifStatus] = useState(null) // 'granted' | 'denied' | 'prompt' | 'unsupported'
   const [leaderboard, setLeaderboard] = useState([])
   const [myPredictions, setMyPredictions] = useState([])
   const [announcement, setAnnouncement] = useState(null)
@@ -50,6 +52,26 @@ export default function Dashboard() {
       }
     }
     fetchData()
+
+    // Check notification status
+    async function checkNotifications() {
+      if (!('Notification' in window)) {
+        setNotifStatus('unsupported')
+      } else if (Notification.permission === 'granted') {
+        const sub = await isSubscribed()
+        setNotifStatus(sub ? 'granted' : 'prompt')
+        if (!sub) {
+          // Auto-subscribe if permission already granted
+          await requestNotificationPermission()
+          setNotifStatus('granted')
+        }
+      } else if (Notification.permission === 'denied') {
+        setNotifStatus('denied')
+      } else {
+        setNotifStatus('prompt')
+      }
+    }
+    checkNotifications()
   }, [])
 
   const dismissAnnouncementModal = () => {
@@ -151,6 +173,26 @@ export default function Dashboard() {
         </div>
         <span className="material-symbols-outlined text-secondary text-xl animate-bounce">trending_up</span>
       </div>
+
+      {/* Notification Permission Prompt */}
+      {notifStatus === 'prompt' && (
+        <div className="xl:col-span-12 bg-secondary/5 border border-secondary/30 rounded-xl px-5 py-4 flex items-center gap-4">
+          <span className="material-symbols-outlined text-secondary text-2xl">notifications_active</span>
+          <div className="flex-1">
+            <p className="font-label text-sm text-on-surface font-bold">Enable Match Reminders</p>
+            <p className="font-label text-xs text-on-surface-variant mt-0.5">Get notified 30 minutes before each match so you never miss a prediction!</p>
+          </div>
+          <button
+            onClick={async () => {
+              const result = await requestNotificationPermission()
+              setNotifStatus(result)
+            }}
+            className="px-4 py-2 bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs font-bold rounded hover:bg-secondary/30 transition-all whitespace-nowrap"
+          >
+            ENABLE
+          </button>
+        </div>
+      )}
 
       {/* Left Column */}
       <div className="xl:col-span-8 space-y-8">

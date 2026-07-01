@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
-import { predictionsAPI, leaderboardAPI } from '../services/api'
+import { predictionsAPI, leaderboardAPI, specialPredictionsAPI, matchesAPI } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 export default function MyPredictions() {
   const { user } = useAuth()
+  const isAdmin = user?.role === 'ADMIN'
   const [predictions, setPredictions] = useState([])
   const [goalScorerPreds, setGoalScorerPreds] = useState([])
   const [motmPreds, setMotmPreds] = useState([])
@@ -13,13 +14,33 @@ export default function MyPredictions() {
   const [filter, setFilter] = useState('ALL')
   const [tab, setTab] = useState('MATCHES')
 
+  // Admin filters
+  const [allUsers, setAllUsers] = useState([])
+  const [selectedUser, setSelectedUser] = useState('')
+  const [allMatches, setAllMatches] = useState([])
+  const [selectedMatchFilter, setSelectedMatchFilter] = useState('')
+
   useEffect(() => {
     async function fetchPredictions() {
       try {
-        const [res, tournRes, breakdownRes] = await Promise.allSettled([
-          predictionsAPI.getMy(),
+        // Admin: load users list and matches for filtering
+        if (isAdmin) {
+          const [usersRes, matchesRes] = await Promise.allSettled([
+            leaderboardAPI.get(),
+            matchesAPI.getAll(),
+          ])
+          if (usersRes.status === 'fulfilled') setAllUsers(usersRes.value.data)
+          if (matchesRes.status === 'fulfilled') setAllMatches(matchesRes.value.data)
+        }
+
+        const targetUser = isAdmin && selectedUser ? selectedUser : null
+        const predPromise = targetUser
+          ? predictionsAPI.getByUser(targetUser)
+          : predictionsAPI.getMy()
+
+        const [res, tournRes] = await Promise.allSettled([
+          predPromise,
           predictionsAPI.getMyTournament(),
-          user?.username ? leaderboardAPI.getBreakdown(user.username) : Promise.reject('no user'),
         ])
         if (res.status === 'fulfilled') {
           setPredictions(res.value.data.map(p => ({
@@ -43,11 +64,11 @@ export default function MyPredictions() {
         }
         if (tournRes.status === 'fulfilled') setTournamentPreds(tournRes.value.data)
 
-        // Get MOTM predictions from breakdown
-        if (breakdownRes.status === 'fulfilled') {
-          const bd = breakdownRes.value.data
-          if (bd.motmDetails) setMotmPreds(bd.motmDetails)
-        }
+        // Get all MOTM predictions for this user
+        try {
+          const motmRes = await specialPredictionsAPI.getAllMyMotm()
+          if (motmRes.data?.length > 0) setMotmPreds(motmRes.data)
+        } catch (err) { /* no motm data */ }
       } catch (err) {
         console.error(err)
       } finally {
@@ -55,14 +76,18 @@ export default function MyPredictions() {
       }
     }
     fetchPredictions()
-  }, [user])
+  }, [user, selectedUser])
 
   const filtered = useMemo(() => {
-    if (filter === 'ALL') return predictions
-    if (filter === 'SCORED') return predictions.filter((p) => p.pointsEarned > 0)
-    if (filter === 'PENDING') return predictions.filter((p) => !p.scored)
-    return predictions
-  }, [predictions, filter])
+    let result = predictions
+    if (filter === 'SCORED') result = result.filter((p) => p.pointsEarned > 0)
+    else if (filter === 'PENDING') result = result.filter((p) => !p.scored)
+    // Admin match filter
+    if (isAdmin && selectedMatchFilter) {
+      result = result.filter(p => String(p.matchId) === selectedMatchFilter)
+    }
+    return result
+  }, [predictions, filter, selectedMatchFilter, isAdmin])
 
   // Group goal scorer predictions by matchId
   const gsByMatch = useMemo(() => {
@@ -74,11 +99,11 @@ export default function MyPredictions() {
     return map
   }, [goalScorerPreds])
 
-  // Group MOTM predictions by match name (breakdown returns match as string)
+  // Group MOTM predictions by match name
   const motmByMatch = useMemo(() => {
     const map = {}
     for (const m of motmPreds) {
-      map[m.match] = m
+      map[m.match] = { player: m.playerName, points: m.pointsEarned || 0, scored: m.scored }
     }
     return map
   }, [motmPreds])
@@ -93,9 +118,38 @@ export default function MyPredictions() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-headline font-bold text-2xl neon-glow-secondary">My Predictions</h1>
-        <p className="font-label text-sm text-on-surface-variant mt-1">Track your prediction history</p>
+        <h1 className="font-headline font-bold text-2xl neon-glow-secondary">{isAdmin ? 'All Predictions' : 'My Predictions'}</h1>
+        <p className="font-label text-sm text-on-surface-variant mt-1">{isAdmin ? 'Filter by user and match' : 'Track your prediction history'}</p>
       </div>
+
+      {/* Admin Filters */}
+      {isAdmin && (
+        <div className="bg-surface-container rounded-xl p-4 border border-secondary/20 space-y-3">
+          <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest">Admin Filters</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <select
+              value={selectedUser}
+              onChange={(e) => setSelectedUser(e.target.value)}
+              className="bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 text-on-surface font-label text-sm px-3 py-2.5 rounded-lg"
+            >
+              <option value="">All Users (showing mine)</option>
+              {allUsers.map(u => (
+                <option key={u.username} value={u.username}>{u.username} ({u.totalPoints} pts)</option>
+              ))}
+            </select>
+            <select
+              value={selectedMatchFilter}
+              onChange={(e) => setSelectedMatchFilter(e.target.value)}
+              className="bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 text-on-surface font-label text-sm px-3 py-2.5 rounded-lg"
+            >
+              <option value="">All Matches</option>
+              {allMatches.filter(m => m.status === 'COMPLETED').map(m => (
+                <option key={m.id} value={String(m.id)}>{m.team1Name} vs {m.team2Name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">

@@ -70,6 +70,14 @@ export default function MatchPrediction() {
           if (firstGs) setFirstScorerId(firstGs.playerId)
           setHasExistingScorers(true)
         }
+        // Load existing MOTM prediction
+        try {
+          const motmRes = await specialPredictionsAPI.getMyMotm(matchId)
+          if (motmRes.data?.playerId) {
+            setMotmPick({ id: motmRes.data.playerId, name: motmRes.data.playerName, teamName: motmRes.data.playerTeam })
+            setHasExistingMotm(true)
+          }
+        } catch (err) { /* no existing MOTM pick */ }
       } catch (err) {
         console.error(err)
       } finally {

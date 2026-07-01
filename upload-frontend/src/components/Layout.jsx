@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import ChatBubble from './ChatBubble'
 
 const navItems = [
   { path: '/', icon: 'grid_view', label: 'Home' },
@@ -146,6 +147,9 @@ export default function Layout({ children }) {
           {children}
         </div>
       </main>
+
+      {/* Chat Bubble */}
+      <ChatBubble />
 
       {/* Bottom Nav - Mobile */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center h-16 lg:hidden border-t border-outline-variant bg-background/95 backdrop-blur-lg shadow-[0_-4px_16px_rgba(0,255,204,0.1)]">
