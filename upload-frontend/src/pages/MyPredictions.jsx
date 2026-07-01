@@ -179,7 +179,7 @@ export default function MyPredictions() {
                         'bg-tertiary/10 text-tertiary border border-tertiary/20'
                       }`}>
                         {pred.scored
-                          ? pred.pointsEarned === 3 ? '+1 Result +2 Exact'
+                          ? pred.pointsEarned === 4 ? '+1 Result +3 Exact'
                           : pred.pointsEarned === 1 ? '+1 Result'
                           : '0 PTS'
                           : 'PENDING'}

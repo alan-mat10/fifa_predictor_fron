@@ -192,6 +192,9 @@ export default function Fixtures() {
                               Pens: {match.team1PenaltyScore} - {match.team2PenaltyScore}
                             </div>
                           )}
+                          {match.omitted && (
+                            <div className="font-label text-[8px] bg-error/20 text-error px-2 py-0.5 rounded mt-1">OMITTED</div>
+                          )}
                         </div>
                       ) : (
                         <span className="font-headline font-extrabold text-sm text-on-surface opacity-30">vs</span>

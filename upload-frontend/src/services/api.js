@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8085',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 })
 
 // Request interceptor — attach JWT token
@@ -130,6 +130,8 @@ export const adminAPI = {
     api.get(`/api/admin/match-goal-scorers/${matchId}`),
   saveMatchGoalScorers: (matchId, scorers) =>
     api.post(`/api/admin/match-goal-scorers/save/${matchId}`, scorers),
+  omitMatch: (matchId) =>
+    api.post(`/api/admin/match/${matchId}/omit`),
   getUserPredictions: (username) =>
     api.get(`/api/admin/user-predictions/${encodeURIComponent(username)}`),
   updatePredictionPoints: (type, predictionId, points) =>

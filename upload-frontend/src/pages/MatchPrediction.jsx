@@ -644,8 +644,8 @@ function AllPredictionsSection({ matchId, match }) {
                   <span className="font-headline font-bold text-sm">{pred.username}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`font-headline font-bold text-sm ${totalPts > 0 ? 'text-secondary neon-glow-secondary' : 'text-error'}`}>
-                    {totalPts > 0 ? `+${totalPts}` : '0'} PTS
+                  <span className={`font-headline font-bold text-sm ${totalPts > 0 ? 'text-secondary neon-glow-secondary' : totalPts < 0 ? 'text-error' : 'text-on-surface-variant'}`}>
+                    {totalPts > 0 ? `+${totalPts}` : totalPts} PTS
                   </span>
                   <span className={`material-symbols-outlined text-on-surface-variant text-sm transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
                     expand_more
@@ -663,8 +663,8 @@ function AllPredictionsSection({ matchId, match }) {
                       <span className="font-label text-xs">Score: {pred.predictedTeam1Score} - {pred.predictedTeam2Score}</span>
                     </div>
                     <div>
-                      {pred.pointsEarned === 3 && (
-                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">+1 Result +2 Exact</span>
+                      {pred.pointsEarned === 4 && (
+                        <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold">+1 Result +3 Exact</span>
                       )}
                       {pred.pointsEarned === 1 && (
                         <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded font-bold">+1 Result</span>
@@ -688,7 +688,7 @@ function AllPredictionsSection({ matchId, match }) {
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
                             gs.pointsEarned > 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'
                           }`}>
-                            {gs.pointsEarned > 0 ? `+${gs.pointsEarned}` : '✗'}
+                            {gs.pointsEarned > 0 ? `+${gs.pointsEarned}` : gs.pointsEarned < 0 ? gs.pointsEarned : '✗'}
                           </span>
                         </div>
                       ))}

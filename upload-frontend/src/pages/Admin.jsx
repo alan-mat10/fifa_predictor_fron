@@ -441,6 +441,46 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Omit Match */}
+      <div className="bg-surface-container rounded-xl p-6 border border-error/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-error">block</span>
+          Omit Match (Exclude from Scoring)
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Mark a match as omitted — predictions for this match won't count in point calculations.
+        </p>
+        <div className="space-y-3">
+          {matches.filter(m => m.status === 'COMPLETED').map((m) => (
+            <div key={m.id} className={`flex items-center justify-between px-3 py-2 rounded-lg border ${m.omitted ? 'bg-error/10 border-error/30' : 'bg-surface-dim border-outline-variant'}`}>
+              <span className="font-label text-sm text-on-surface">
+                {m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})
+                {m.omitted && <span className="ml-2 text-[9px] bg-error/20 text-error px-1.5 py-0.5 rounded">OMITTED</span>}
+              </span>
+              <button
+                onClick={async () => {
+                  try {
+                    await adminAPI.omitMatch(m.id)
+                    const matchRes = await matchesAPI.getAll()
+                    setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
+                    addToast(m.omitted ? 'Match restored' : 'Match omitted', 'success')
+                  } catch (err) {
+                    addToast('Failed to toggle omit', 'error')
+                  }
+                }}
+                className={`px-3 py-1 font-label text-xs rounded transition-all ${
+                  m.omitted
+                    ? 'bg-secondary/20 border border-secondary/50 text-secondary hover:bg-secondary/30'
+                    : 'bg-error/20 border border-error/50 text-error hover:bg-error/30'
+                }`}
+              >
+                {m.omitted ? 'RESTORE' : 'OMIT'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Submit Goal Scorers */}
       <div className="bg-surface-container rounded-xl p-6 card-glow">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">

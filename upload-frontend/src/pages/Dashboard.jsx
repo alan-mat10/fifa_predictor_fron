@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [leaderboard, setLeaderboard] = useState([])
   const [myPredictions, setMyPredictions] = useState([])
   const [announcement, setAnnouncement] = useState(null)
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -33,7 +34,14 @@ export default function Dashboard() {
         if (leaderboardRes.status === 'fulfilled') setLeaderboard(leaderboardRes.value.data)
         if (predictionsRes.status === 'fulfilled') setMyPredictions(predictionsRes.value.data)
         if (announcementRes.status === 'fulfilled' && announcementRes.value.data?.message) {
-          setAnnouncement(announcementRes.value.data.message)
+          const msg = announcementRes.value.data.message
+          setAnnouncement(msg)
+          // Show modal if user hasn't seen this announcement yet
+          const seenKey = `announcement_seen_${user?.username}`
+          const lastSeen = localStorage.getItem(seenKey)
+          if (lastSeen !== msg) {
+            setShowAnnouncementModal(true)
+          }
         }
       } catch (err) {
         console.error(err)
@@ -43,6 +51,13 @@ export default function Dashboard() {
     }
     fetchData()
   }, [])
+
+  const dismissAnnouncementModal = () => {
+    setShowAnnouncementModal(false)
+    if (announcement && user?.username) {
+      localStorage.setItem(`announcement_seen_${user.username}`, announcement)
+    }
+  }
 
   if (loading) return <LoadingSpinner text="Syncing neural data..." />
 
@@ -60,6 +75,38 @@ export default function Dashboard() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+      {/* Announcement Modal Popup */}
+      {showAnnouncementModal && announcement && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={dismissAnnouncementModal}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative bg-surface-container rounded-2xl border border-tertiary/40 shadow-[0_0_40px_rgba(0,255,204,0.2)] w-full max-w-sm overflow-hidden animate-[scaleIn_0.3s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Glow header */}
+            <div className="bg-gradient-to-r from-tertiary/20 via-primary/10 to-secondary/20 px-6 py-4 border-b border-tertiary/20">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-tertiary text-2xl animate-pulse">campaign</span>
+                <h3 className="font-headline font-bold text-sm text-on-surface">New Announcement</h3>
+              </div>
+            </div>
+            {/* Body */}
+            <div className="px-6 py-5">
+              <p className="font-label text-sm text-on-surface leading-relaxed">{announcement}</p>
+            </div>
+            {/* Footer */}
+            <div className="px-6 pb-5">
+              <button
+                onClick={dismissAnnouncementModal}
+                className="w-full py-3 bg-tertiary/20 border border-tertiary/50 text-tertiary font-headline font-bold text-xs tracking-widest rounded-lg hover:bg-tertiary/30 transition-all"
+              >
+                GOT IT
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pinned Announcement */}
       {announcement && (
         <div className="xl:col-span-12 bg-tertiary/10 border border-tertiary/30 rounded-xl px-5 py-3 flex items-start gap-3">
@@ -74,6 +121,35 @@ export default function Dashboard() {
         <p className="font-label text-xs text-on-surface-variant flex-1">
           <strong className="text-error">Fair Play:</strong> Any player found violating the spirit of the game — exploiting bugs, manipulating scores, or gaining unfair advantages by any means — will be disqualified from the match result or from the tournament itself.
         </p>
+      </div>
+
+      {/* Prize Announcement */}
+      <div className="xl:col-span-12 bg-gradient-to-r from-primary/10 via-tertiary/10 to-secondary/10 border border-primary/30 rounded-xl px-6 py-5 flex items-center gap-4 overflow-hidden relative">
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
+        <span className="material-symbols-outlined text-primary text-3xl animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+        <div className="flex-1">
+          <p className="font-headline font-bold text-sm text-on-surface">🏆 Winner Prize</p>
+          <p className="font-label text-xs text-on-surface-variant mt-1">
+            The <strong className="text-primary">tournament winner</strong> will be awarded with a <strong className="text-secondary">jersey of their favorite team!</strong>
+          </p>
+        </div>
+        <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>checkroom</span>
+      </div>
+
+      {/* Knockout Table Prediction Coming Soon */}
+      <div className="xl:col-span-12 bg-gradient-to-r from-tertiary/10 to-secondary/5 border border-tertiary/30 rounded-xl px-6 py-5 flex items-center gap-4 relative overflow-hidden">
+        <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-tertiary/10 rounded-full blur-2xl"></div>
+        <span className="material-symbols-outlined text-tertiary text-3xl">table_chart</span>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <p className="font-headline font-bold text-sm text-on-surface">Knockout Stage Table Predictions</p>
+            <span className="text-[9px] bg-tertiary/20 text-tertiary px-2 py-0.5 rounded font-bold animate-pulse border border-tertiary/40">COMING SOON</span>
+          </div>
+          <p className="font-label text-xs text-on-surface-variant mt-1">
+            Round of 16 to Final — predict the full knockout bracket. Score <strong className="text-secondary">exciting bonus points</strong> for perfect predictions!
+          </p>
+        </div>
+        <span className="material-symbols-outlined text-secondary text-xl animate-bounce">trending_up</span>
       </div>
 
       {/* Left Column */}
@@ -251,7 +327,7 @@ export default function Dashboard() {
             <div>
               <h4 className="font-headline font-bold text-sm text-tertiary">Scoring Rules</h4>
               <p className="text-xs text-on-tertiary-container mt-1 leading-relaxed">
-                Exact score: 5 pts. Correct result: 3 pts. Goal scorer bonus: 2 pts each. First scorer: 3 pts.
+                Correct result: +1. Exact score: +3 bonus. Goal scorer: +3 each (wrong: -1). MOTM: +3.
               </p>
             </div>
           </div>

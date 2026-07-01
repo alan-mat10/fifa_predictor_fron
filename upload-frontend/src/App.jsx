@@ -11,6 +11,7 @@ import Leaderboard from './pages/Leaderboard'
 import TournamentPredictions from './pages/TournamentPredictions'
 import MatchResults from './pages/MatchResults'
 import Rules from './pages/Rules'
+import TablePrediction from './pages/TablePrediction'
 import Admin from './pages/Admin'
 
 function ProtectedLayout({ children, adminOnly = false }) {
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="/tournament-predictions" element={<ProtectedLayout><TournamentPredictions /></ProtectedLayout>} />
         <Route path="/match-results/:matchId" element={<ProtectedLayout><MatchResults /></ProtectedLayout>} />
         <Route path="/rules" element={<ProtectedLayout><Rules /></ProtectedLayout>} />
+        <Route path="/table-prediction" element={<ProtectedLayout><TablePrediction /></ProtectedLayout>} />
         <Route path="/admin" element={<ProtectedLayout adminOnly><Admin /></ProtectedLayout>} />
       </Routes>
     </ToastProvider>
