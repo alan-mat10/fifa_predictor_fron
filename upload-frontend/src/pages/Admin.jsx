@@ -966,6 +966,18 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Change User Password */}
+      <div className="bg-surface-container rounded-xl p-6 border border-outline-variant">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-on-surface-variant">lock_reset</span>
+          Change User Password
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Reset a user's password. They'll need to use the new password on next login.
+        </p>
+        <ChangePasswordForm users={users} addToast={addToast} />
+      </div>
+
       {/* User Score Management */}
       <div className="bg-surface-container rounded-xl p-6 border border-error/30">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
@@ -1127,6 +1139,58 @@ function PredictionEditSection({ title, icon, items, type, renderLabel, onUpdate
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+function ChangePasswordForm({ users, addToast }) {
+  const [selectedUser, setSelectedUser] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  return (
+    <div className="space-y-4">
+      <select
+        value={selectedUser}
+        onChange={(e) => setSelectedUser(e.target.value)}
+        className="w-full bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-3 rounded-lg"
+      >
+        <option value="">Select user...</option>
+        {users.map((u) => (
+          <option key={u.username} value={u.username}>{u.username}</option>
+        ))}
+      </select>
+
+      {selectedUser && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="New password..."
+            className="flex-1 bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
+          />
+          <button
+            onClick={async () => {
+              if (!newPassword.trim()) return
+              setSubmitting(true)
+              try {
+                await adminAPI.changeUserPassword(selectedUser, newPassword.trim())
+                addToast(`Password changed for ${selectedUser}`, 'success')
+                setNewPassword('')
+              } catch (err) {
+                addToast(err.response?.data?.error || 'Failed to change password', 'error')
+              } finally {
+                setSubmitting(false)
+              }
+            }}
+            disabled={!newPassword.trim() || submitting}
+            className="px-5 py-2.5 bg-secondary/20 border border-secondary/50 text-secondary font-label font-bold text-xs tracking-widest rounded hover:bg-secondary/30 transition-all disabled:opacity-30"
+          >
+            {submitting ? '...' : 'CHANGE'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
