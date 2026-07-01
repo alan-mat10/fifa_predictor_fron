@@ -55,7 +55,7 @@ function PointsBreakdownModal({ username, onClose }) {
               <div className="grid grid-cols-2 gap-3">
                 <SummaryCard label="Match Results" points={breakdown.summary.matchResults.points} count={breakdown.summary.matchResults.count} color="secondary" icon="check_circle" />
                 <SummaryCard label="Exact Scores" points={breakdown.summary.exactScores.points} count={breakdown.summary.exactScores.count} color="primary" icon="scoreboard" />
-                <SummaryCard label="Goal Scorers" points={breakdown.summary.goalScorers.points} count={breakdown.summary.goalScorers.count} color="secondary" icon="sports_soccer" />
+                <SummaryCard label="Goal Scorers" points={breakdown.summary.goalScorers.points} count={`${breakdown.summary.goalScorers.correct || 0}✓ ${breakdown.summary.goalScorers.wrong || 0}✗`} color={breakdown.summary.goalScorers.points >= 0 ? "secondary" : "error"} icon="sports_soccer" />
                 <SummaryCard label="Man of the Match" points={breakdown.summary.motm.points} count={breakdown.summary.motm.count} color="tertiary" icon="star" />
                 {breakdown.summary.tournament.points > 0 && (
                   <SummaryCard label="Tournament" points={breakdown.summary.tournament.points} count={breakdown.summary.tournament.count} color="tertiary" icon="emoji_events" />
@@ -75,7 +75,7 @@ function PointsBreakdownModal({ username, onClose }) {
               {breakdown.goalScorerDetails.length > 0 && (
                 <BreakdownSection title="Goal Scorers" icon="sports_soccer" color="secondary">
                   {breakdown.goalScorerDetails.map((d, i) => (
-                    <DetailRow key={i} left={d.match} mid={d.player} right={`+${d.points}`} />
+                    <DetailRow key={i} left={d.match} mid={`${d.player} (×${d.predictedGoals || 1})`} right={`${d.points >= 0 ? '+' : ''}${d.points}`} rightColor={d.points >= 0 ? 'text-secondary' : 'text-error'} />
                   ))}
                 </BreakdownSection>
               )}
@@ -114,8 +114,8 @@ function SummaryCard({ label, points, count, color, icon }) {
         <span className={`material-symbols-outlined text-${color} text-sm`}>{icon}</span>
         <span className="font-label text-[10px] text-on-surface-variant uppercase tracking-wider">{label}</span>
       </div>
-      <span className={`font-headline font-extrabold text-lg text-${color}`}>+{points}</span>
-      <span className="font-label text-[10px] text-on-surface-variant ml-1">({count}x)</span>
+      <span className={`font-headline font-extrabold text-lg text-${color}`}>{points >= 0 ? '+' : ''}{points}</span>
+      <span className="font-label text-[10px] text-on-surface-variant ml-1">({count})</span>
     </div>
   )
 }
@@ -132,7 +132,7 @@ function BreakdownSection({ title, icon, color, children }) {
   )
 }
 
-function DetailRow({ left, mid, right, tag }) {
+function DetailRow({ left, mid, right, tag, rightColor }) {
   return (
     <div className="flex items-center justify-between px-3 py-2 bg-surface-dim rounded-lg text-xs">
       <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ function DetailRow({ left, mid, right, tag }) {
       </div>
       <div className="flex items-center gap-2 ml-2 shrink-0">
         {tag && <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">{tag}</span>}
-        <span className="font-headline font-bold text-secondary">{right}</span>
+        <span className={`font-headline font-bold ${rightColor || 'text-secondary'}`}>{right}</span>
       </div>
     </div>
   )

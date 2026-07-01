@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.github/workflows/deploy.yml
+.env
+.DS_Store
