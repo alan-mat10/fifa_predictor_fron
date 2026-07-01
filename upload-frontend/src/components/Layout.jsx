@@ -7,6 +7,7 @@ const navItems = [
   { path: '/predictions', icon: 'edit_note', label: 'Predictions' },
   { path: '/leaderboard', icon: 'leaderboard', label: 'Leaderboard' },
   { path: '/tournament-predictions', icon: 'emoji_events', label: 'Tournament' },
+  { path: '/table-prediction', icon: 'table_chart', label: 'Table Prediction' },
   { path: '/rules', icon: 'info', label: 'Rules' },
 ]
 

@@ -441,80 +441,174 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Omit Match */}
+      <div className="bg-surface-container rounded-xl p-6 border border-error/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-error">block</span>
+          Omit Match (Exclude from Scoring)
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Mark a match as omitted — predictions for this match won't count in point calculations.
+        </p>
+        <div className="space-y-3">
+          {matches.filter(m => m.status === 'COMPLETED').map((m) => (
+            <div key={m.id} className={`flex items-center justify-between px-3 py-2 rounded-lg border ${m.omitted ? 'bg-error/10 border-error/30' : 'bg-surface-dim border-outline-variant'}`}>
+              <span className="font-label text-sm text-on-surface">
+                {m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})
+                {m.omitted && <span className="ml-2 text-[9px] bg-error/20 text-error px-1.5 py-0.5 rounded">OMITTED</span>}
+              </span>
+              <button
+                onClick={async () => {
+                  try {
+                    await adminAPI.omitMatch(m.id)
+                    const matchRes = await matchesAPI.getAll()
+                    setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
+                    addToast(m.omitted ? 'Match restored' : 'Match omitted', 'success')
+                  } catch (err) {
+                    addToast('Failed to toggle omit', 'error')
+                  }
+                }}
+                className={`px-3 py-1 font-label text-xs rounded transition-all ${
+                  m.omitted
+                    ? 'bg-secondary/20 border border-secondary/50 text-secondary hover:bg-secondary/30'
+                    : 'bg-error/20 border border-error/50 text-error hover:bg-error/30'
+                }`}
+              >
+                {m.omitted ? 'RESTORE' : 'OMIT'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Submit Goal Scorers */}
       <div className="bg-surface-container rounded-xl p-6 card-glow">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
           <span className="material-symbols-outlined text-secondary">sports_soccer</span>
-          Submit Goal Scorers
+          Manage Goal Scorers
         </h3>
 
         <div className="space-y-4">
           <select
             value={gsMatchId}
-            onChange={(e) => setGsMatchId(e.target.value)}
+            onChange={async (e) => {
+              setGsMatchId(e.target.value)
+              setGsSelectedPlayers([])
+              // Load existing scorers if any
+              if (e.target.value) {
+                try {
+                  const res = await adminAPI.getMatchGoalScorers(Number(e.target.value))
+                  if (res.data.length > 0) {
+                    setGsSelectedPlayers(res.data.map((s, i) => ({
+                      playerName: s.playerName,
+                      minute: s.minute,
+                      ownGoal: s.ownGoal,
+                      penalty: s.penalty,
+                      _key: Date.now() + i
+                    })))
+                  }
+                } catch (err) { /* no existing data */ }
+              }
+            }}
             className="w-full bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-3 rounded-lg"
           >
             <option value="">Select match...</option>
-            {matches.map((m) => (
-              <option key={m.id} value={m.id}>{m.team1} vs {m.team2}</option>
+            {matches.filter(m => m.status === 'COMPLETED').map((m) => (
+              <option key={m.id} value={m.id}>{m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})</option>
             ))}
           </select>
 
           {gsMatchId && (
             <>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">search</span>
+              {/* Fetch from API button */}
+              <button
+                onClick={async () => {
+                  setGsSubmitting(true)
+                  try {
+                    const res = await adminAPI.fetchGoalScorersFromApi(Number(gsMatchId))
+                    if (res.data.length > 0) {
+                      setGsSelectedPlayers(res.data.map((s, i) => ({
+                        playerName: s.playerName,
+                        minute: s.minute || 0,
+                        ownGoal: s.ownGoal || false,
+                        penalty: s.penalty || false,
+                        _key: Date.now() + i
+                      })))
+                      addToast(`Fetched ${res.data.length} scorer(s) from API`, 'success')
+                    } else {
+                      addToast('No scorers found from API', 'info')
+                    }
+                  } catch (err) {
+                    addToast('Failed to fetch from API. Check API key.', 'error')
+                  } finally {
+                    setGsSubmitting(false)
+                  }
+                }}
+                disabled={gsSubmitting}
+                className="w-full py-2.5 bg-secondary/10 border border-secondary/40 text-secondary font-label text-xs tracking-widest rounded hover:bg-secondary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">cloud_download</span>
+                {gsSubmitting ? 'FETCHING...' : 'FETCH SCORERS FROM API'}
+              </button>
+
+              {/* Manual add */}
+              <div className="flex gap-2">
                 <input
                   type="text"
                   value={gsPlayerSearch}
                   onChange={(e) => setGsPlayerSearch(e.target.value)}
-                  placeholder="Search player..."
-                  className="w-full bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm pl-10 pr-4 py-2.5 rounded-lg"
+                  placeholder="Add player name manually..."
+                  className="flex-1 bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && gsPlayerSearch.trim()) {
+                      setGsSelectedPlayers([...gsSelectedPlayers, {
+                        playerName: gsPlayerSearch.trim(),
+                        minute: 0,
+                        ownGoal: false,
+                        penalty: false,
+                        _key: Date.now()
+                      }])
+                      setGsPlayerSearch('')
+                    }
+                  }}
                 />
+                <button
+                  onClick={() => {
+                    if (gsPlayerSearch.trim()) {
+                      setGsSelectedPlayers([...gsSelectedPlayers, {
+                        playerName: gsPlayerSearch.trim(),
+                        minute: 0,
+                        ownGoal: false,
+                        penalty: false,
+                        _key: Date.now()
+                      }])
+                      setGsPlayerSearch('')
+                    }
+                  }}
+                  className="px-4 py-2 bg-secondary/10 border border-secondary/40 text-secondary font-label text-xs rounded hover:bg-secondary/20 transition-all"
+                >
+                  Add
+                </button>
               </div>
 
-              {gsPlayerResults.length > 0 && (
-                <div className="bg-surface-dim border border-outline-variant rounded-lg max-h-40 overflow-y-auto">
-                  {gsPlayerResults.map((player) => (
-                    <button
-                      key={player.id}
-                      onClick={() => {
-                        // Allow same player multiple times (for multiple goals)
-                        setGsSelectedPlayers([...gsSelectedPlayers, { ...player, _key: Date.now() }])
-                        if (gsSelectedPlayers.length === 0) setGsFirstScorerId(player.id)
-                        setGsPlayerSearch('')
-                        setGsPlayerResults([])
-                      }}
-                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-variant transition-colors text-left border-b border-outline-variant last:border-b-0"
-                    >
-                      <span className="font-label text-sm">{player.name} ({player.teamName})</span>
-                      <span className="material-symbols-outlined text-secondary text-sm">add_circle</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
+              {/* Scorer list */}
               {gsSelectedPlayers.length > 0 && (
                 <div className="space-y-2">
-                  <p className="font-label text-[10px] text-on-surface-variant uppercase">Selected (star = first scorer) — add same player multiple times for multiple goals</p>
+                  <p className="font-label text-[10px] text-on-surface-variant uppercase">
+                    Scorers ({gsSelectedPlayers.length}) — edit or remove before saving
+                  </p>
                   {gsSelectedPlayers.map((p, idx) => (
-                    <div key={p._key || `${p.id}-${idx}`} className="flex items-center justify-between px-3 py-2 bg-surface-variant rounded-lg border border-outline-variant">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setGsFirstScorerId(p.id)}
-                          className={`material-symbols-outlined text-sm ${gsFirstScorerId === p.id ? 'text-tertiary' : 'text-on-surface-variant'}`}
-                          style={{ fontVariationSettings: gsFirstScorerId === p.id ? "'FILL' 1" : "'FILL' 0" }}
-                        >
-                          star
-                        </button>
-                        <span className="font-label text-sm">{p.name}</span>
-                        <span className="font-label text-[10px] text-on-surface-variant">⚽</span>
+                    <div key={p._key || idx} className="flex items-center justify-between px-3 py-2 bg-surface-variant rounded-lg border border-outline-variant">
+                      <div className="flex items-center gap-2 flex-1">
+                        <span className="font-label text-sm text-on-surface">{p.playerName}</span>
+                        <span className="font-label text-[10px] text-on-surface-variant">({p.minute}')</span>
+                        {p.ownGoal && <span className="text-[9px] bg-error/20 text-error px-1.5 py-0.5 rounded">OG</span>}
+                        {p.penalty && <span className="text-[9px] bg-tertiary/20 text-tertiary px-1.5 py-0.5 rounded">PEN</span>}
                       </div>
                       <button onClick={() => {
                         const updated = [...gsSelectedPlayers]
                         updated.splice(idx, 1)
                         setGsSelectedPlayers(updated)
-                        if (gsFirstScorerId === p.id && !updated.find(x => x.id === p.id)) setGsFirstScorerId(null)
                       }} className="material-symbols-outlined text-error text-sm">close</button>
                     </div>
                   ))}
@@ -524,11 +618,27 @@ export default function Admin() {
           )}
 
           <button
-            onClick={handleSubmitGoalScorers}
+            onClick={async () => {
+              if (!gsMatchId || gsSelectedPlayers.length === 0) return
+              setGsSubmitting(true)
+              try {
+                await adminAPI.saveMatchGoalScorers(Number(gsMatchId), gsSelectedPlayers.map(p => ({
+                  playerName: p.playerName,
+                  minute: p.minute || 0,
+                  ownGoal: p.ownGoal || false,
+                  penalty: p.penalty || false
+                })))
+                addToast('Goal scorers saved!', 'success')
+              } catch (err) {
+                addToast(err.response?.data || 'Failed to save', 'error')
+              } finally {
+                setGsSubmitting(false)
+              }
+            }}
             disabled={!gsMatchId || gsSelectedPlayers.length === 0 || gsSubmitting}
             className="w-full py-3 btn-neon-secondary rounded disabled:opacity-30"
           >
-            {gsSubmitting ? 'SUBMITTING...' : 'SUBMIT GOAL SCORERS'}
+            {gsSubmitting ? 'SAVING...' : 'SAVE GOAL SCORERS'}
           </button>
         </div>
       </div>

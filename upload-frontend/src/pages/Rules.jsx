@@ -14,10 +14,10 @@ export default function Rules() {
         </h3>
         <div className="space-y-3">
           <PointRow icon="check_circle" color="secondary" points="+1" label="Correct Match Result" desc="Predict win/draw/loss correctly (group stage & knockout non-penalty)" />
-          <PointRow icon="scoreboard" color="primary" points="+2" label="Exact Score" desc="Predict the exact scoreline (bonus on top of result/penalty winner)" />
+          <PointRow icon="scoreboard" color="primary" points="+3" label="Exact Score" desc="Predict the exact scoreline (bonus on top of result/penalty winner)" />
           <PointRow icon="gavel" color="tertiary" points="+1" label="Correct Penalty Winner (Knockout)" desc="In knockout, if match goes to pens: +1 replaces 'correct result' point" />
-          <PointRow icon="person" color="secondary" points="+2" label="Correct Goal Scorer" desc="Per correct player × predicted goals (e.g., predict 2 goals, scores 2 = +4)" />
-          <PointRow icon="person_off" color="error" points="-2" label="Wrong Goal Scorer" desc="Per incorrect predicted goal (e.g., predict 1 goal, scores 0 = -2)" />
+          <PointRow icon="person" color="secondary" points="+3" label="Correct Goal Scorer" desc="Per correct player × predicted goals (e.g., predict 2 goals, scores 2 = +6)" />
+          <PointRow icon="person_off" color="error" points="-1" label="Wrong Goal Scorer" desc="Per incorrect predicted goal (e.g., predict 1 goal, scores 0 = -1)" />
           <PointRow icon="star" color="tertiary" points="+3" label="Man of the Match" desc="Predict the official MOTM correctly" />
         </div>
 
@@ -28,8 +28,8 @@ export default function Rules() {
             <p>• Score = goals in 90 min + extra time (not penalty shootout)</p>
             <p>• If you predict a draw, you must pick the penalty winner</p>
             <p>• Correct penalty winner = <strong className="text-secondary">+1</strong> (replaces the normal "correct result" point)</p>
-            <p>• Exact score bonus still applies = <strong className="text-primary">+2</strong></p>
-            <p>• Example: Predict 1-1 + Team A wins pens → Result is 1-1 + Team A wins → <strong className="text-on-surface">+1 (pen winner) + 2 (exact) = 3 pts</strong></p>
+            <p>• Exact score bonus still applies = <strong className="text-primary">+3</strong></p>
+            <p>• Example: Predict 1-1 + Team A wins pens → Result is 1-1 + Team A wins → <strong className="text-on-surface">+1 (pen winner) + 3 (exact) = 4 pts</strong></p>
           </div>
         </div>
       </div>
@@ -87,11 +87,11 @@ export default function Rules() {
           <p className="text-on-surface-variant">Your MOTM: Julián Quiñones ✅</p>
           <div className="border-t border-outline-variant pt-2 mt-2 space-y-1">
             <p className="text-secondary">+ 1 (correct result)</p>
-            <p className="text-primary">+ 2 (exact score)</p>
-            <p className="text-secondary">+ 4 (Quiñones predicted 2, scored 2 → 2×+2)</p>
-            <p className="text-error">- 2 (Giménez predicted 1, scored 0 → 1×-2)</p>
+            <p className="text-primary">+ 3 (exact score)</p>
+            <p className="text-secondary">+ 6 (Quiñones predicted 2, scored 2 → 2×+3)</p>
+            <p className="text-error">- 1 (Giménez predicted 1, scored 0 → 1×-1)</p>
             <p className="text-tertiary">+ 3 (correct MOTM)</p>
-            <p className="text-on-surface font-bold border-t border-outline-variant pt-1 mt-1">= 8 points total for this match</p>
+            <p className="text-on-surface font-bold border-t border-outline-variant pt-1 mt-1">= 12 points total for this match</p>
           </div>
         </div>
       </div>
