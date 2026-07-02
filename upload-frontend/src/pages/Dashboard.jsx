@@ -154,22 +154,6 @@ export default function Dashboard() {
         <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>checkroom</span>
       </div>
 
-      {/* Knockout Table Prediction Coming Soon */}
-      <div className="xl:col-span-12 bg-gradient-to-r from-tertiary/10 to-secondary/5 border border-tertiary/30 rounded-xl px-6 py-5 flex items-center gap-4 relative overflow-hidden">
-        <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-tertiary/10 rounded-full blur-2xl"></div>
-        <span className="material-symbols-outlined text-tertiary text-3xl">table_chart</span>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-headline font-bold text-sm text-on-surface">Knockout Stage Table Predictions</p>
-            <span className="text-[9px] bg-tertiary/20 text-tertiary px-2 py-0.5 rounded font-bold animate-pulse border border-tertiary/40">COMING SOON</span>
-          </div>
-          <p className="font-label text-xs text-on-surface-variant mt-1">
-            Round of 16 to Final — predict the full knockout bracket. Score <strong className="text-secondary">exciting bonus points</strong> for perfect predictions!
-          </p>
-        </div>
-        <span className="material-symbols-outlined text-secondary text-xl animate-bounce">trending_up</span>
-      </div>
-
       {/* Notification Permission Prompt */}
       {notifStatus === 'prompt' && (
         <div className="xl:col-span-12 bg-secondary/5 border border-secondary/30 rounded-xl px-5 py-4 flex items-center gap-4">
