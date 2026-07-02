@@ -551,14 +551,15 @@ export default function Admin() {
                 {gsSubmitting ? 'FETCHING...' : 'FETCH SCORERS FROM API'}
               </button>
 
-              {/* Manual add */}
-              <div className="flex gap-2">
+              {/* Player search + manual add */}
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">search</span>
                 <input
                   type="text"
                   value={gsPlayerSearch}
                   onChange={(e) => setGsPlayerSearch(e.target.value)}
-                  placeholder="Add player name manually..."
-                  className="flex-1 bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
+                  placeholder="Search player or type name manually..."
+                  className="w-full bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 focus:outline-none text-on-surface font-label text-sm pl-10 pr-4 py-2.5 rounded-lg"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && gsPlayerSearch.trim()) {
                       setGsSelectedPlayers([...gsSelectedPlayers, {
@@ -569,27 +570,56 @@ export default function Admin() {
                         _key: Date.now()
                       }])
                       setGsPlayerSearch('')
+                      setGsPlayerResults([])
                     }
                   }}
                 />
+              </div>
+
+              {/* Search results from DB */}
+              {gsPlayerResults.length > 0 && (
+                <div className="bg-surface-dim border border-outline-variant rounded-lg max-h-40 overflow-y-auto">
+                  {gsPlayerResults.map((player) => (
+                    <button
+                      key={player.id}
+                      onClick={() => {
+                        setGsSelectedPlayers([...gsSelectedPlayers, {
+                          playerName: player.name,
+                          minute: 0,
+                          ownGoal: false,
+                          penalty: false,
+                          _key: Date.now()
+                        }])
+                        setGsPlayerSearch('')
+                        setGsPlayerResults([])
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-surface-variant transition-colors text-left border-b border-outline-variant last:border-b-0"
+                    >
+                      <span className="font-label text-sm">{player.name} ({player.teamName})</span>
+                      <span className="material-symbols-outlined text-secondary text-sm">add_circle</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Manual add button (if search doesn't find player) */}
+              {gsPlayerSearch.trim().length > 1 && gsPlayerResults.length === 0 && (
                 <button
                   onClick={() => {
-                    if (gsPlayerSearch.trim()) {
-                      setGsSelectedPlayers([...gsSelectedPlayers, {
-                        playerName: gsPlayerSearch.trim(),
-                        minute: 0,
-                        ownGoal: false,
-                        penalty: false,
-                        _key: Date.now()
-                      }])
-                      setGsPlayerSearch('')
-                    }
+                    setGsSelectedPlayers([...gsSelectedPlayers, {
+                      playerName: gsPlayerSearch.trim(),
+                      minute: 0,
+                      ownGoal: false,
+                      penalty: false,
+                      _key: Date.now()
+                    }])
+                    setGsPlayerSearch('')
                   }}
-                  className="px-4 py-2 bg-secondary/10 border border-secondary/40 text-secondary font-label text-xs rounded hover:bg-secondary/20 transition-all"
+                  className="w-full py-2 bg-surface-dim border border-dashed border-secondary/40 text-secondary font-label text-xs rounded hover:bg-secondary/10 transition-all"
                 >
-                  Add
+                  + Add "{gsPlayerSearch.trim()}" manually
                 </button>
-              </div>
+              )}
 
               {/* Scorer list */}
               {gsSelectedPlayers.length > 0 && (
