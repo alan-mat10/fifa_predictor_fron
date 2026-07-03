@@ -139,6 +139,8 @@ export const adminAPI = {
     api.post(`/api/admin/match/${matchId}/omit`),
   changeUserPassword: (username, newPassword) =>
     api.post(`/api/admin/change-password?username=${encodeURIComponent(username)}&newPassword=${encodeURIComponent(newPassword)}`),
+  editMatchScore: (matchId, team1Score, team2Score) =>
+    api.post(`/api/admin/edit-match-score?matchId=${matchId}&team1Score=${team1Score}&team2Score=${team2Score}`),
   getUserPredictions: (username) =>
     api.get(`/api/admin/user-predictions/${encodeURIComponent(username)}`),
   updatePredictionPoints: (type, predictionId, points) =>

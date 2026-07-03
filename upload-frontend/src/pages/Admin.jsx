@@ -390,6 +390,52 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Recalculate All Points */}
+      <div className="bg-surface-container rounded-xl p-6 border border-primary/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary">calculate</span>
+          Recalculate All Points
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Resets all user points to 0 and re-scores every completed match from scratch. Use after fixing scores or goal scorers.
+        </p>
+        <button
+          onClick={async () => {
+            if (!confirm('This will reset ALL user points and recalculate from scratch. Continue?')) return
+            setPullLoading(true)
+            try {
+              const res = await adminAPI.recalculateAllPoints()
+              addToast(res.data, 'success')
+              setPullResult(res.data)
+            } catch (err) {
+              addToast(err.response?.data || 'Recalculation failed', 'error')
+            } finally {
+              setPullLoading(false)
+            }
+          }}
+          disabled={pullLoading}
+          className="w-full py-3 bg-primary/10 border border-primary/50 text-primary font-headline font-bold text-xs tracking-widest rounded hover:bg-primary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-sm">refresh</span>
+          {pullLoading ? 'RECALCULATING...' : 'RECALCULATE ALL POINTS'}
+        </button>
+      </div>
+
+      {/* Edit Match Score */}
+      <div className="bg-surface-container rounded-xl p-6 border border-error/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-error">edit</span>
+          Edit Match Score
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Correct the score of a completed match if it was pulled incorrectly.
+        </p>
+        <EditMatchScore matches={matches} addToast={addToast} onUpdate={async () => {
+          const matchRes = await matchesAPI.getAll()
+          setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
+        }} />
+      </div>
+
       {/* Submit Match Result */}
       <div className="bg-surface-container rounded-xl p-6 primary-glow-border">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
@@ -1221,6 +1267,79 @@ function ChangePasswordForm({ users, addToast }) {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function EditMatchScore({ matches, addToast, onUpdate }) {
+  const [editMatchId, setEditMatchId] = useState('')
+  const [editTeam1Score, setEditTeam1Score] = useState(0)
+  const [editTeam2Score, setEditTeam2Score] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+
+  const selectedMatch = matches.find(m => String(m.id) === editMatchId)
+
+  return (
+    <div className="space-y-4">
+      <select
+        value={editMatchId}
+        onChange={(e) => {
+          setEditMatchId(e.target.value)
+          const m = matches.find(mx => String(mx.id) === e.target.value)
+          if (m) {
+            setEditTeam1Score(m.team1Score ?? 0)
+            setEditTeam2Score(m.team2Score ?? 0)
+          }
+        }}
+        className="w-full bg-surface-dim border border-outline-variant focus:border-error focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-3 rounded-lg"
+      >
+        <option value="">Select completed match...</option>
+        {matches.filter(m => m.status === 'COMPLETED').map((m) => (
+          <option key={m.id} value={m.id}>{m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})</option>
+        ))}
+      </select>
+
+      {selectedMatch && (
+        <div className="flex items-center justify-center gap-6">
+          <div className="text-center">
+            <p className="font-label text-xs text-on-surface-variant mb-2">{selectedMatch.team1}</p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setEditTeam1Score(Math.max(0, editTeam1Score - 1))} className="w-8 h-8 rounded bg-surface-variant border border-outline-variant flex items-center justify-center hover:border-error text-sm">-</button>
+              <span className="text-2xl font-headline font-extrabold w-8 text-center">{editTeam1Score}</span>
+              <button onClick={() => setEditTeam1Score(editTeam1Score + 1)} className="w-8 h-8 rounded bg-surface-variant border border-outline-variant flex items-center justify-center hover:border-secondary text-sm">+</button>
+            </div>
+          </div>
+          <span className="text-on-surface-variant">—</span>
+          <div className="text-center">
+            <p className="font-label text-xs text-on-surface-variant mb-2">{selectedMatch.team2}</p>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setEditTeam2Score(Math.max(0, editTeam2Score - 1))} className="w-8 h-8 rounded bg-surface-variant border border-outline-variant flex items-center justify-center hover:border-error text-sm">-</button>
+              <span className="text-2xl font-headline font-extrabold w-8 text-center">{editTeam2Score}</span>
+              <button onClick={() => setEditTeam2Score(editTeam2Score + 1)} className="w-8 h-8 rounded bg-surface-variant border border-outline-variant flex items-center justify-center hover:border-secondary text-sm">+</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={async () => {
+          if (!editMatchId) return
+          setSubmitting(true)
+          try {
+            await adminAPI.editMatchScore(Number(editMatchId), editTeam1Score, editTeam2Score)
+            addToast('Match score updated', 'success')
+            if (onUpdate) await onUpdate()
+          } catch (err) {
+            addToast(err.response?.data || 'Failed to update score', 'error')
+          } finally {
+            setSubmitting(false)
+          }
+        }}
+        disabled={!editMatchId || submitting}
+        className="w-full py-3 bg-error/10 border border-error/50 text-error font-headline font-bold text-xs tracking-widest rounded hover:bg-error/20 transition-all disabled:opacity-30"
+      >
+        {submitting ? 'UPDATING...' : 'UPDATE SCORE'}
+      </button>
     </div>
   )
 }
