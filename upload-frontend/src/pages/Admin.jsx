@@ -454,6 +454,39 @@ export default function Admin() {
         )}
       </div>
 
+      {/* Fix Completed Bracket */}
+      <div className="bg-surface-container rounded-xl p-6 border border-secondary/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-secondary">sync_alt</span>
+          Fix Completed Bracket
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Re-advances winners of all completed knockout matches into the next round. Use this if R16/QF slots are empty despite results being submitted.
+        </p>
+        <button
+          onClick={async () => {
+            setPullLoading(true)
+            try {
+              const res = await adminAPI.fixBracket()
+              addToast('Bracket fixed!', 'success')
+              setPullResult(res.data)
+            } catch (err) {
+              addToast(err.response?.data || 'Fix failed', 'error')
+            } finally {
+              setPullLoading(false)
+            }
+          }}
+          disabled={pullLoading}
+          className="w-full py-3 bg-secondary/10 border border-secondary/50 text-secondary font-headline font-bold text-xs tracking-widest rounded hover:bg-secondary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-sm">sync_alt</span>
+          {pullLoading ? 'FIXING...' : 'FIX COMPLETED BRACKET'}
+        </button>
+        {pullResult && (
+          <pre className="mt-3 font-label text-xs text-secondary bg-secondary/10 px-3 py-2 rounded border border-secondary/20 whitespace-pre-wrap">{pullResult}</pre>
+        )}
+      </div>
+
       {/* Edit Match Score */}
       <div className="bg-surface-container rounded-xl p-6 border border-error/30">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
