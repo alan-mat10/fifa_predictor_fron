@@ -163,6 +163,8 @@ export const adminAPI = {
     api.post('/api/admin/tournament-settings/lock-now'),
   unlockTournamentPredictions: () =>
     api.post('/api/admin/tournament-settings/unlock'),
+  setupBracket: () =>
+    api.post('/api/admin/setup-bracket'),
 }
 
 export default api

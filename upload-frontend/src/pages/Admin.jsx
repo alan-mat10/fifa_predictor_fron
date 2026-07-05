@@ -421,6 +421,39 @@ export default function Admin() {
         </button>
       </div>
 
+      {/* Setup Bracket */}
+      <div className="bg-surface-container rounded-xl p-6 border border-secondary/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-secondary">account_tree</span>
+          Setup Bracket (QF / SF / Final)
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Creates QF, SF, 3rd place and Final placeholder matches and sets Portugal/Spain on R16 M93, Argentina/Egypt on R16 M95. Safe to run multiple times.
+        </p>
+        <button
+          onClick={async () => {
+            setPullLoading(true)
+            try {
+              const res = await adminAPI.setupBracket()
+              addToast('Bracket setup complete!', 'success')
+              setPullResult(res.data)
+            } catch (err) {
+              addToast(err.response?.data || 'Bracket setup failed', 'error')
+            } finally {
+              setPullLoading(false)
+            }
+          }}
+          disabled={pullLoading}
+          className="w-full py-3 bg-secondary/10 border border-secondary/50 text-secondary font-headline font-bold text-xs tracking-widest rounded hover:bg-secondary/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined text-sm">account_tree</span>
+          {pullLoading ? 'SETTING UP...' : 'SETUP BRACKET'}
+        </button>
+        {pullResult && (
+          <pre className="mt-3 font-label text-xs text-secondary bg-secondary/10 px-3 py-2 rounded border border-secondary/20 whitespace-pre-wrap">{pullResult}</pre>
+        )}
+      </div>
+
       {/* Edit Match Score */}
       <div className="bg-surface-container rounded-xl p-6 border border-error/30">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
