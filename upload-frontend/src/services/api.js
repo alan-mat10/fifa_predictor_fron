@@ -47,6 +47,7 @@ export const matchesAPI = {
   getScorers: (matchId) => api.get(`/api/matches/${matchId}/scorers`),
   getStandings: () => api.get('/api/matches/standings'),
   getStandingsByGroup: (group) => api.get(`/api/matches/standings/${group}`),
+  getTeams: () => api.get('/api/matches/teams'),
 }
 
 // ─── Predictions ───────────────────────────────────────
@@ -141,6 +142,8 @@ export const adminAPI = {
     api.post(`/api/admin/change-password?username=${encodeURIComponent(username)}&newPassword=${encodeURIComponent(newPassword)}`),
   editMatchScore: (matchId, team1Score, team2Score) =>
     api.post(`/api/admin/edit-match-score?matchId=${matchId}&team1Score=${team1Score}&team2Score=${team2Score}`),
+  editMatchDetails: (data) =>
+    api.post('/api/admin/edit-match-details', data),
   getUserPredictions: (username) =>
     api.get(`/api/admin/user-predictions/${encodeURIComponent(username)}`),
   updatePredictionPoints: (type, predictionId, points) =>
