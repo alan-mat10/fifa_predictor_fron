@@ -553,44 +553,67 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Omit Match */}
-      <div className="bg-surface-container rounded-xl p-6 border border-error/30">
+      {/* Omit Match - Accordion */}
+      <div className="bg-surface-container rounded-xl border border-error/30 overflow-hidden">
+        <button
+          onClick={() => document.getElementById('omit-section').classList.toggle('hidden')}
+          className="w-full p-6 flex items-center justify-between hover:bg-error/5 transition-colors"
+        >
+          <h3 className="font-headline font-bold text-sm flex items-center gap-2">
+            <span className="material-symbols-outlined text-error">block</span>
+            Omit Match (Exclude from Scoring)
+          </h3>
+          <span className="material-symbols-outlined text-on-surface-variant">expand_more</span>
+        </button>
+        <div id="omit-section" className="hidden px-6 pb-6">
+          <p className="text-xs text-on-surface-variant mb-4">
+            Mark a match as omitted — predictions for this match won't count in point calculations.
+          </p>
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {matches.filter(m => m.status === 'COMPLETED').map((m) => (
+              <div key={m.id} className={`flex items-center justify-between px-3 py-2 rounded-lg border ${m.omitted ? 'bg-error/10 border-error/30' : 'bg-surface-dim border-outline-variant'}`}>
+                <span className="font-label text-xs text-on-surface">
+                  {m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})
+                  {m.omitted && <span className="ml-2 text-[9px] bg-error/20 text-error px-1.5 py-0.5 rounded">OMITTED</span>}
+                </span>
+                <button
+                  onClick={async () => {
+                    try {
+                      await adminAPI.omitMatch(m.id)
+                      const matchRes = await matchesAPI.getAll()
+                      setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
+                      addToast(m.omitted ? 'Match restored' : 'Match omitted', 'success')
+                    } catch (err) {
+                      addToast('Failed to toggle omit', 'error')
+                    }
+                  }}
+                  className={`px-3 py-1 font-label text-xs rounded transition-all shrink-0 ${
+                    m.omitted
+                      ? 'bg-secondary/20 border border-secondary/50 text-secondary hover:bg-secondary/30'
+                      : 'bg-error/20 border border-error/50 text-error hover:bg-error/30'
+                  }`}
+                >
+                  {m.omitted ? 'RESTORE' : 'OMIT'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Edit Match Details (Team/Time) */}
+      <div className="bg-surface-container rounded-xl p-6 border border-tertiary/30">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-error">block</span>
-          Omit Match (Exclude from Scoring)
+          <span className="material-symbols-outlined text-tertiary">edit_calendar</span>
+          Edit Match Details (Team / Time)
         </h3>
         <p className="text-xs text-on-surface-variant mb-4">
-          Mark a match as omitted — predictions for this match won't count in point calculations.
+          Change team or match time for upcoming matches (including TBD knockout fixtures).
         </p>
-        <div className="space-y-3">
-          {matches.filter(m => m.status === 'COMPLETED').map((m) => (
-            <div key={m.id} className={`flex items-center justify-between px-3 py-2 rounded-lg border ${m.omitted ? 'bg-error/10 border-error/30' : 'bg-surface-dim border-outline-variant'}`}>
-              <span className="font-label text-sm text-on-surface">
-                {m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})
-                {m.omitted && <span className="ml-2 text-[9px] bg-error/20 text-error px-1.5 py-0.5 rounded">OMITTED</span>}
-              </span>
-              <button
-                onClick={async () => {
-                  try {
-                    await adminAPI.omitMatch(m.id)
-                    const matchRes = await matchesAPI.getAll()
-                    setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
-                    addToast(m.omitted ? 'Match restored' : 'Match omitted', 'success')
-                  } catch (err) {
-                    addToast('Failed to toggle omit', 'error')
-                  }
-                }}
-                className={`px-3 py-1 font-label text-xs rounded transition-all ${
-                  m.omitted
-                    ? 'bg-secondary/20 border border-secondary/50 text-secondary hover:bg-secondary/30'
-                    : 'bg-error/20 border border-error/50 text-error hover:bg-error/30'
-                }`}
-              >
-                {m.omitted ? 'RESTORE' : 'OMIT'}
-              </button>
-            </div>
-          ))}
-        </div>
+        <EditMatchDetails matches={matches} addToast={addToast} onUpdate={async () => {
+          const matchRes = await matchesAPI.getAll()
+          setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
+        }} />
       </div>
 
       {/* Submit Goal Scorers */}
@@ -1406,6 +1429,105 @@ function EditMatchScore({ matches, addToast, onUpdate }) {
       >
         {submitting ? 'UPDATING...' : 'UPDATE SCORE'}
       </button>
+    </div>
+  )
+}
+
+function EditMatchDetails({ matches, addToast, onUpdate }) {
+  const [editMatchId, setEditMatchId] = useState('')
+  const [teams, setTeams] = useState([])
+  const [team1Id, setTeam1Id] = useState('')
+  const [team2Id, setTeam2Id] = useState('')
+  const [matchDateTime, setMatchDateTime] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    matchesAPI.getTeams().then(res => setTeams(res.data)).catch(() => {})
+  }, [])
+
+  const selectedMatch = matches.find(m => String(m.id) === editMatchId)
+
+  useEffect(() => {
+    if (selectedMatch) {
+      setTeam1Id(selectedMatch.team1Id ? String(selectedMatch.team1Id) : '')
+      setTeam2Id(selectedMatch.team2Id ? String(selectedMatch.team2Id) : '')
+      setMatchDateTime(selectedMatch.matchDateTime ? selectedMatch.matchDateTime.substring(0, 16) : '')
+    }
+  }, [editMatchId])
+
+  return (
+    <div className="space-y-4">
+      <select
+        value={editMatchId}
+        onChange={(e) => setEditMatchId(e.target.value)}
+        className="w-full bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-3 rounded-lg"
+      >
+        <option value="">Select match to edit...</option>
+        {matches.filter(m => m.status !== 'COMPLETED').map((m) => (
+          <option key={m.id} value={m.id}>{m.team1 || 'TBD'} vs {m.team2 || 'TBD'} — {m.stage}</option>
+        ))}
+      </select>
+
+      {selectedMatch && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-label text-[10px] text-on-surface-variant uppercase mb-1 block">Team 1</label>
+              <select
+                value={team1Id}
+                onChange={(e) => setTeam1Id(e.target.value)}
+                className="w-full bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 text-on-surface font-label text-xs px-3 py-2.5 rounded-lg"
+              >
+                <option value="">TBD</option>
+                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="font-label text-[10px] text-on-surface-variant uppercase mb-1 block">Team 2</label>
+              <select
+                value={team2Id}
+                onChange={(e) => setTeam2Id(e.target.value)}
+                className="w-full bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 text-on-surface font-label text-xs px-3 py-2.5 rounded-lg"
+              >
+                <option value="">TBD</option>
+                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="font-label text-[10px] text-on-surface-variant uppercase mb-1 block">Match Date & Time (ET)</label>
+            <input
+              type="datetime-local"
+              value={matchDateTime}
+              onChange={(e) => setMatchDateTime(e.target.value)}
+              className="w-full bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 text-on-surface font-label text-xs px-3 py-2.5 rounded-lg"
+            />
+          </div>
+          <button
+            onClick={async () => {
+              if (!editMatchId) return
+              setSubmitting(true)
+              try {
+                const data = { matchId: Number(editMatchId) }
+                if (team1Id) data.team1Id = Number(team1Id)
+                if (team2Id) data.team2Id = Number(team2Id)
+                if (matchDateTime) data.matchDateTime = matchDateTime
+                await adminAPI.editMatchDetails(data)
+                addToast('Match details updated', 'success')
+                if (onUpdate) await onUpdate()
+              } catch (err) {
+                addToast(err.response?.data || 'Failed to update', 'error')
+              } finally {
+                setSubmitting(false)
+              }
+            }}
+            disabled={!editMatchId || submitting}
+            className="w-full py-3 bg-tertiary/10 border border-tertiary/50 text-tertiary font-headline font-bold text-xs tracking-widest rounded hover:bg-tertiary/20 transition-all disabled:opacity-30"
+          >
+            {submitting ? 'UPDATING...' : 'UPDATE MATCH DETAILS'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
