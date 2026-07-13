@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [myPredictions, setMyPredictions] = useState([])
   const [announcement, setAnnouncement] = useState(null)
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
+  const [showContestPopup, setShowContestPopup] = useState(false)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -68,6 +69,11 @@ export default function Dashboard() {
       }
     }
     checkNotifications()
+
+    // Show contest popup once per session
+    if (!sessionStorage.getItem('contest_popup_seen')) {
+      setShowContestPopup(true)
+    }
   }, [])
 
   const dismissAnnouncementModal = () => {
@@ -125,6 +131,62 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Contest Popup Modal — once per login session */}
+      {showContestPopup && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => { setShowContestPopup(false); sessionStorage.setItem('contest_popup_seen', '1') }}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div
+            className="relative bg-surface-container rounded-2xl border border-primary/40 shadow-[0_0_40px_rgba(255,45,120,0.2)] w-full max-w-md max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-primary/20 via-tertiary/10 to-secondary/20 px-6 py-4 border-b border-primary/20">
+              <h3 className="font-headline font-bold text-sm text-on-surface">
+                🏆 FIFA World Cup Score Prediction – Prize Announcement! ⚽🎉
+              </h3>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="font-label text-sm text-on-surface leading-relaxed">
+                The excitement continues! For all the remaining FIFA World Cup matches, we're introducing a special reward.
+              </p>
+              <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4">
+                <p className="font-label text-sm font-bold text-secondary">💰 Prize: ₹250 for each match</p>
+              </div>
+              <div className="space-y-3">
+                <p className="font-label text-xs font-bold text-on-surface uppercase tracking-wider">How to win:</p>
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-secondary text-sm mt-0.5">emoji_events</span>
+                  <p className="font-label text-xs text-on-surface-variant leading-relaxed">
+                    The user with the highest prediction points for a match will win <strong className="text-secondary">₹250</strong>.
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">handshake</span>
+                  <p className="font-label text-xs text-on-surface-variant leading-relaxed">
+                    If two or more users finish with the same highest points, the ₹250 prize will be split equally among them.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-tertiary/10 border border-tertiary/20 rounded-lg p-3">
+                <p className="font-label text-xs text-on-surface leading-relaxed">
+                  📢 Make sure to submit your predictions before kickoff and don't miss your chance to win!
+                </p>
+              </div>
+              <p className="font-label text-sm text-on-surface text-center pt-2">
+                Good luck to everyone, and may the best predictor win! 🍀⚽
+              </p>
+            </div>
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => { setShowContestPopup(false); sessionStorage.setItem('contest_popup_seen', '1') }}
+                className="w-full py-3 bg-primary/20 border border-primary/50 text-primary font-headline font-bold text-xs tracking-widest rounded-lg hover:bg-primary/30 transition-all"
+              >
+                LET'S GO! 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Pinned Announcement */}
       {announcement && (
         <div className="xl:col-span-12 bg-tertiary/10 border border-tertiary/30 rounded-xl px-5 py-3 flex items-start gap-3">
@@ -141,17 +203,49 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Prize Announcement */}
-      <div className="xl:col-span-12 bg-gradient-to-r from-primary/10 via-tertiary/10 to-secondary/10 border border-primary/30 rounded-xl px-6 py-5 flex items-center gap-4 overflow-hidden relative">
-        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
-        <span className="material-symbols-outlined text-primary text-3xl animate-pulse" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
-        <div className="flex-1">
-          <p className="font-headline font-bold text-sm text-on-surface">🏆 Winner Prize</p>
-          <p className="font-label text-xs text-on-surface-variant mt-1">
-            The <strong className="text-primary">tournament winner</strong> will be awarded with a <strong className="text-secondary">jersey of their favorite team!</strong>
+      {/* Contest Announcement */}
+      <div className="xl:col-span-12 bg-gradient-to-br from-primary/10 via-tertiary/5 to-secondary/10 border border-primary/30 rounded-xl p-6 overflow-hidden relative">
+        <div className="absolute -right-6 -top-6 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
+        <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-secondary/10 rounded-full blur-2xl"></div>
+        
+        <div className="relative space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+            <h3 className="font-headline font-bold text-base text-on-surface">
+              🏆 FIFA World Cup Score Prediction – Prize Announcement! ⚽🎉
+            </h3>
+          </div>
+
+          <p className="font-label text-sm text-on-surface-variant leading-relaxed">
+            The excitement continues! For all the remaining FIFA World Cup matches, we're introducing a special reward.
+          </p>
+
+          <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4 space-y-3">
+            <p className="font-label text-sm font-bold text-secondary">💰 Prize: ₹250 for each match</p>
+            <div className="space-y-2 pl-1">
+              <div className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-secondary text-sm mt-0.5">emoji_events</span>
+                <p className="font-label text-xs text-on-surface-variant">
+                  The user with the highest prediction points for a match will win <strong className="text-secondary">₹250</strong>.
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">handshake</span>
+                <p className="font-label text-xs text-on-surface-variant">
+                  If two or more users finish with the same highest points, the ₹250 prize will be split equally among them.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="font-label text-xs text-on-surface-variant">
+            📢 Make sure to submit your predictions before kickoff and don't miss your chance to win!
+          </p>
+
+          <p className="font-label text-sm text-on-surface text-center">
+            Good luck to everyone, and may the best predictor win! 🍀⚽
           </p>
         </div>
-        <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>checkroom</span>
       </div>
 
       {/* Notification Permission Prompt */}
