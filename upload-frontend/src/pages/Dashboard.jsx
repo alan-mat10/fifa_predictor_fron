@@ -149,20 +149,20 @@ export default function Dashboard() {
                 The excitement continues! For all the remaining FIFA World Cup matches, we're introducing a special reward.
               </p>
               <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4">
-                <p className="font-label text-sm font-bold text-secondary">💰 Prize: ₹250 for each match</p>
+                <p className="font-label text-sm font-bold text-secondary">💰 Prize: ₹500 for each match</p>
               </div>
               <div className="space-y-3">
                 <p className="font-label text-xs font-bold text-on-surface uppercase tracking-wider">How to win:</p>
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-secondary text-sm mt-0.5">emoji_events</span>
                   <p className="font-label text-xs text-on-surface-variant leading-relaxed">
-                    The user with the highest prediction points for a match will win <strong className="text-secondary">₹250</strong>.
+                    The user with the highest prediction points for a match will win <strong className="text-secondary">₹500</strong>.
                   </p>
                 </div>
                 <div className="flex items-start gap-3">
                   <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">handshake</span>
                   <p className="font-label text-xs text-on-surface-variant leading-relaxed">
-                    If two or more users finish with the same highest points, the ₹250 prize will be split equally among them.
+                    If two or more users finish with the same highest points, the ₹500 prize will be split equally among them.
                   </p>
                 </div>
               </div>
@@ -234,18 +234,18 @@ export default function Dashboard() {
           </p>
 
           <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-4 space-y-3">
-            <p className="font-label text-sm font-bold text-secondary">💰 Prize: ₹250 for each match</p>
+            <p className="font-label text-sm font-bold text-secondary">💰 Prize: ₹500 for each match</p>
             <div className="space-y-2 pl-1">
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-secondary text-sm mt-0.5">emoji_events</span>
                 <p className="font-label text-xs text-on-surface-variant">
-                  The user with the highest prediction points for a match will win <strong className="text-secondary">₹250</strong>.
+                  The user with the highest prediction points for a match will win <strong className="text-secondary">₹500</strong>.
                 </p>
               </div>
               <div className="flex items-start gap-2">
                 <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">handshake</span>
                 <p className="font-label text-xs text-on-surface-variant">
-                  If two or more users finish with the same highest points, the ₹250 prize will be split equally among them.
+                  If two or more users finish with the same highest points, the ₹500 prize will be split equally among them.
                 </p>
               </div>
             </div>
