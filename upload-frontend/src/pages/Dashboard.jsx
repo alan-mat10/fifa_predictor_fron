@@ -70,8 +70,8 @@ export default function Dashboard() {
     }
     checkNotifications()
 
-    // Show contest popup once per session
-    if (!sessionStorage.getItem('contest_popup_seen')) {
+    // Show contest popup once per browser session (shows again after tab close or new login)
+    if (!sessionStorage.getItem('contest_popup_dismissed')) {
       setShowContestPopup(true)
     }
   }, [])
@@ -133,7 +133,7 @@ export default function Dashboard() {
 
       {/* Contest Popup Modal — once per login session */}
       {showContestPopup && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => { setShowContestPopup(false); sessionStorage.setItem('contest_popup_seen', '1') }}>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => { setShowContestPopup(false); sessionStorage.setItem('contest_popup_dismissed', '1') }}>
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
           <div
             className="relative bg-surface-container rounded-2xl border border-primary/40 shadow-[0_0_40px_rgba(255,45,120,0.2)] w-full max-w-md max-h-[85vh] overflow-y-auto"
@@ -177,7 +177,7 @@ export default function Dashboard() {
             </div>
             <div className="px-6 pb-5">
               <button
-                onClick={() => { setShowContestPopup(false); sessionStorage.setItem('contest_popup_seen', '1') }}
+                onClick={() => { setShowContestPopup(false); sessionStorage.setItem('contest_popup_dismissed', '1') }}
                 className="w-full py-3 bg-primary/20 border border-primary/50 text-primary font-headline font-bold text-xs tracking-widest rounded-lg hover:bg-primary/30 transition-all"
               >
                 LET'S GO! 🚀
@@ -201,6 +201,19 @@ export default function Dashboard() {
         <p className="font-label text-xs text-on-surface-variant flex-1">
           <strong className="text-error">Fair Play:</strong> Any player found violating the spirit of the game — exploiting bugs, manipulating scores, or gaining unfair advantages by any means — will be disqualified from the match result or from the tournament itself.
         </p>
+      </div>
+
+      {/* Jersey Prize */}
+      <div className="xl:col-span-12 bg-gradient-to-r from-tertiary/10 to-secondary/10 border border-tertiary/30 rounded-xl px-6 py-4 flex items-center gap-4 overflow-hidden relative">
+        <div className="absolute -right-4 -top-4 w-20 h-20 bg-tertiary/10 rounded-full blur-2xl"></div>
+        <span className="material-symbols-outlined text-tertiary text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>checkroom</span>
+        <div className="flex-1">
+          <p className="font-headline font-bold text-sm text-on-surface">🏆 Tournament Winner Prize</p>
+          <p className="font-label text-xs text-on-surface-variant mt-1">
+            The overall <strong className="text-tertiary">tournament winner</strong> will be awarded with a <strong className="text-secondary">jersey of their favorite team!</strong>
+          </p>
+        </div>
+        <span className="material-symbols-outlined text-secondary text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
       </div>
 
       {/* Contest Announcement */}
