@@ -304,13 +304,13 @@ export default function Dashboard() {
           <img
             src="/winners/bivin-france-spain.jpg"
             alt="Prize Distribution - Bivin R"
-            className="w-full h-48 sm:h-56 object-cover"
+            className="w-full h-64 sm:h-72 object-cover object-center"
           />
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-secondary text-sm">emoji_events</span>
-              <p className="font-headline font-bold text-xs text-white">Prize Awarded! 🎉 France vs Spain — Rs.500 to Bivin R</p>
-            </div>
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-4 py-3">
+            <p className="font-headline font-bold text-xs text-white whitespace-nowrap">
+              <span className="material-symbols-outlined text-secondary text-xs align-middle mr-1">emoji_events</span>
+              Prize Awarded! 🎉 France vs Spain — Rs.500 to Bivin R
+            </p>
           </div>
         </div>
         <div className="px-4 py-3 bg-surface-container flex items-center gap-3">
