@@ -298,6 +298,33 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Prize Distribution Feed */}
+      <div className="xl:col-span-12 bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/50 shadow-lg">
+        <div className="relative">
+          <img
+            src="/winners/bivin-france-spain.jpg"
+            alt="Prize Distribution - Bivin R"
+            className="w-full h-auto object-cover"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-secondary/30 border-2 border-secondary flex items-center justify-center">
+                <span className="material-symbols-outlined text-secondary text-sm">emoji_events</span>
+              </div>
+              <div>
+                <p className="font-headline font-bold text-sm text-white">Prize Awarded! 🎉</p>
+                <p className="font-label text-xs text-white/80">France vs Spain — Rs.500 to Bivin R</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="px-5 py-3 bg-surface-container">
+          <p className="font-label text-xs text-on-surface-variant">
+            🏆 Congratulations to <strong className="text-secondary">Bivin R</strong> for winning the prediction contest for France vs Spain!
+          </p>
+        </div>
+      </div>
+
       {/* Notification Permission Prompt */}
       {notifStatus === 'prompt' && (
         <div className="xl:col-span-12 bg-secondary/5 border border-secondary/30 rounded-xl px-5 py-4 flex items-center gap-4">
