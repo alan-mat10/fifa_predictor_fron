@@ -48,6 +48,7 @@ export const matchesAPI = {
   getStandings: () => api.get('/api/matches/standings'),
   getStandingsByGroup: (group) => api.get(`/api/matches/standings/${group}`),
   getTeams: () => api.get('/api/matches/teams'),
+  getPrizeWinners: () => api.get('/api/matches/prize-winners'),
 }
 
 // ─── Predictions ───────────────────────────────────────
@@ -138,6 +139,10 @@ export const adminAPI = {
     api.post(`/api/admin/match-goal-scorers/save/${matchId}`, scorers),
   omitMatch: (matchId) =>
     api.post(`/api/admin/match/${matchId}/omit`),
+  togglePrizeMatch: (matchId) =>
+    api.post(`/api/admin/match/${matchId}/prize`),
+  setPrizeWinner: (matchId, winner) =>
+    api.post(`/api/admin/match/${matchId}/prize-winner?winner=${encodeURIComponent(winner)}`),
   changeUserPassword: (username, newPassword) =>
     api.post(`/api/admin/change-password?username=${encodeURIComponent(username)}&newPassword=${encodeURIComponent(newPassword)}`),
   editMatchScore: (matchId, team1Score, team2Score) =>

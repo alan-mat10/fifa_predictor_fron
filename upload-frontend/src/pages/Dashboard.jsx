@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [notifStatus, setNotifStatus] = useState(null) // 'granted' | 'denied' | 'prompt' | 'unsupported'
   const [leaderboard, setLeaderboard] = useState([])
   const [myPredictions, setMyPredictions] = useState([])
+  const [prizeWinners, setPrizeWinners] = useState([])
   const [announcement, setAnnouncement] = useState(null)
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
   const [showContestPopup, setShowContestPopup] = useState(false)
@@ -20,11 +21,12 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [matchesRes, leaderboardRes, predictionsRes, announcementRes] = await Promise.allSettled([
+        const [matchesRes, leaderboardRes, predictionsRes, announcementRes, prizeRes] = await Promise.allSettled([
           matchesAPI.getToday(),
           leaderboardAPI.get(),
           predictionsAPI.getMy(),
           announcementAPI.get(),
+          matchesAPI.getPrizeWinners(),
         ])
         if (matchesRes.status === 'fulfilled') {
           setTodayMatches(matchesRes.value.data.map(m => ({
@@ -46,6 +48,7 @@ export default function Dashboard() {
             setShowAnnouncementModal(true)
           }
         }
+        if (prizeRes.status === 'fulfilled') setPrizeWinners(prizeRes.value.data)
       } catch (err) {
         console.error(err)
       } finally {
@@ -172,18 +175,22 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              {/* Winner Announcement */}
-              <div className="bg-gradient-to-r from-secondary/20 to-tertiary/20 border border-secondary/40 rounded-lg p-4 text-center space-y-2">
-                <span className="text-2xl">🎉🏆🎉</span>
-                <p className="font-headline font-bold text-sm text-secondary">Match Winner Announced!</p>
-                <p className="font-label text-xs text-on-surface">
-                  <strong className="text-on-surface">France vs Spain</strong>
-                </p>
-                <p className="font-label text-sm text-on-surface">
-                  🥇 <strong className="text-secondary">Bivin R</strong> has won <strong className="text-secondary">Rs.500</strong>!
-                </p>
-                <p className="font-label text-xs text-tertiary">Congratulations! 🎊</p>
-              </div>
+              {/* Winner Announcements */}
+              {prizeWinners.length > 0 && (
+                <div className="space-y-3">
+                  {prizeWinners.map((pw, i) => (
+                    <div key={i} className="bg-gradient-to-r from-secondary/20 to-tertiary/20 border border-secondary/40 rounded-lg p-3 text-center space-y-1">
+                      <span className="text-lg">🎉🏆</span>
+                      <p className="font-label text-xs text-on-surface">
+                        <strong>{pw.team1} {pw.team1Score} - {pw.team2Score} {pw.team2}</strong>
+                      </p>
+                      <p className="font-label text-sm text-on-surface">
+                        🥇 <strong className="text-secondary">{pw.winner}</strong> wins <strong className="text-secondary">Rs.500</strong>! 🎊
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <p className="font-label text-sm text-on-surface text-center pt-2">
                 Good luck to everyone, and may the best predictor win! 🍀⚽
@@ -269,18 +276,51 @@ export default function Dashboard() {
             📢 Make sure to submit your predictions before kickoff and don't miss your chance to win!
           </p>
 
-          {/* Winner Announcement */}
-          <div className="bg-gradient-to-r from-secondary/20 to-tertiary/20 border border-secondary/40 rounded-lg p-4 text-center space-y-2">
-            <span className="text-xl">🎉🏆🎉</span>
-            <p className="font-headline font-bold text-sm text-secondary">Match Winner Announced!</p>
-            <p className="font-label text-xs text-on-surface"><strong>France vs Spain</strong></p>
-            <p className="font-label text-sm text-on-surface">
-              🥇 <strong className="text-secondary">Bivin R</strong> wins <strong className="text-secondary">Rs.500</strong>! Congratulations! 🎊
-            </p>
-          </div>
+          {/* Winner Announcements */}
+          {prizeWinners.length > 0 && (
+            <div className="space-y-3">
+              <p className="font-headline font-bold text-sm text-secondary">🏆 Match Winners</p>
+              {prizeWinners.map((pw, i) => (
+                <div key={i} className="flex items-center justify-between px-4 py-3 bg-secondary/10 border border-secondary/30 rounded-lg">
+                  <div>
+                    <p className="font-label text-xs text-on-surface-variant">{pw.team1} {pw.team1Score} - {pw.team2Score} {pw.team2}</p>
+                    <p className="font-label text-sm text-on-surface font-bold">🥇 {pw.winner} <span className="text-secondary">Rs.500</span></p>
+                  </div>
+                  <span className="text-lg">🎊</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <p className="font-label text-sm text-on-surface text-center">
             Good luck to everyone, and may the best predictor win! 🍀⚽
+          </p>
+        </div>
+      </div>
+
+      {/* Prize Distribution Feed */}
+      <div className="xl:col-span-12 bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/50 shadow-lg">
+        <div className="relative">
+          <img
+            src="/winners/bivin-france-spain.jpg"
+            alt="Prize Distribution - Bivin R"
+            className="w-full h-auto object-cover"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-secondary/30 border-2 border-secondary flex items-center justify-center">
+                <span className="material-symbols-outlined text-secondary text-sm">emoji_events</span>
+              </div>
+              <div>
+                <p className="font-headline font-bold text-sm text-white">Prize Awarded! 🎉</p>
+                <p className="font-label text-xs text-white/80">France vs Spain — Rs.500 to Bivin R</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="px-5 py-3 bg-surface-container">
+          <p className="font-label text-xs text-on-surface-variant">
+            🏆 Congratulations to <strong className="text-secondary">Bivin R</strong> for winning the prediction contest for France vs Spain!
           </p>
         </div>
       </div>

@@ -880,6 +880,21 @@ export default function Admin() {
         </div>
       </div>
 
+      {/* Set Match Prize Winner */}
+      <div className="bg-surface-container rounded-xl p-6 border border-secondary/30">
+        <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+          Set Match Prize Winner (Rs.500)
+        </h3>
+        <p className="text-xs text-on-surface-variant mb-4">
+          Select a completed match and set the winner. This will show on the homepage for all users.
+        </p>
+        <PrizeWinnerManager matches={matches} addToast={addToast} onUpdate={async () => {
+          const matchRes = await matchesAPI.getAll()
+          setMatches(matchRes.data.map(mx => ({ ...mx, team1: mx.team1Name, team2: mx.team2Name })))
+        }} />
+      </div>
+
       {/* Award Tournament Prizes */}
       <div className="bg-surface-container rounded-xl p-6 border border-tertiary/30">
         <h3 className="font-headline font-bold text-sm mb-4 flex items-center gap-2">
@@ -1525,6 +1540,58 @@ function EditMatchDetails({ matches, addToast, onUpdate }) {
             className="w-full py-3 bg-tertiary/10 border border-tertiary/50 text-tertiary font-headline font-bold text-xs tracking-widest rounded hover:bg-tertiary/20 transition-all disabled:opacity-30"
           >
             {submitting ? 'UPDATING...' : 'UPDATE MATCH DETAILS'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PrizeWinnerManager({ matches, addToast, onUpdate }) {
+  const [selectedMatch, setSelectedMatch] = useState('')
+  const [winnerName, setWinnerName] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  return (
+    <div className="space-y-4">
+      <select
+        value={selectedMatch}
+        onChange={(e) => setSelectedMatch(e.target.value)}
+        className="w-full bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 text-on-surface font-label text-sm px-4 py-3 rounded-lg"
+      >
+        <option value="">Select completed match...</option>
+        {matches.filter(m => m.status === 'COMPLETED').map((m) => (
+          <option key={m.id} value={m.id}>{m.team1} vs {m.team2} ({m.team1Score}-{m.team2Score})</option>
+        ))}
+      </select>
+      {selectedMatch && (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={winnerName}
+            onChange={(e) => setWinnerName(e.target.value)}
+            placeholder="Winner username..."
+            className="flex-1 bg-surface-dim border border-outline-variant focus:border-secondary focus:ring-0 text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
+          />
+          <button
+            onClick={async () => {
+              if (!winnerName.trim()) return
+              setSubmitting(true)
+              try {
+                await adminAPI.setPrizeWinner(Number(selectedMatch), winnerName.trim())
+                addToast('Prize winner set!', 'success')
+                setWinnerName('')
+                if (onUpdate) await onUpdate()
+              } catch (err) {
+                addToast('Failed to set winner', 'error')
+              } finally {
+                setSubmitting(false)
+              }
+            }}
+            disabled={!winnerName.trim() || submitting}
+            className="px-5 py-2.5 bg-secondary/20 border border-secondary/50 text-secondary font-label font-bold text-xs rounded hover:bg-secondary/30 transition-all disabled:opacity-30"
+          >
+            {submitting ? '...' : 'SET WINNER'}
           </button>
         </div>
       )}
