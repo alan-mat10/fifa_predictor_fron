@@ -307,14 +307,9 @@ export default function Dashboard() {
             className="w-full h-48 sm:h-56 object-cover"
           />
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-secondary/30 border-2 border-secondary flex items-center justify-center">
-                <span className="material-symbols-outlined text-secondary text-xs">emoji_events</span>
-              </div>
-              <div>
-                <p className="font-headline font-bold text-xs text-white">Prize Awarded! 🎉</p>
-                <p className="font-label text-[10px] text-white/80">France vs Spain — Rs.500 to Bivin R</p>
-              </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary text-sm">emoji_events</span>
+              <p className="font-headline font-bold text-xs text-white">Prize Awarded! 🎉 France vs Spain — Rs.500 to Bivin R</p>
             </div>
           </div>
         </div>
