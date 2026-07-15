@@ -171,6 +171,20 @@ export default function Dashboard() {
                   📢 Make sure to submit your predictions before kickoff and don't miss your chance to win!
                 </p>
               </div>
+
+              {/* Winner Announcement */}
+              <div className="bg-gradient-to-r from-secondary/20 to-tertiary/20 border border-secondary/40 rounded-lg p-4 text-center space-y-2">
+                <span className="text-2xl">🎉🏆🎉</span>
+                <p className="font-headline font-bold text-sm text-secondary">Match Winner Announced!</p>
+                <p className="font-label text-xs text-on-surface">
+                  <strong className="text-on-surface">France vs Spain</strong>
+                </p>
+                <p className="font-label text-sm text-on-surface">
+                  🥇 <strong className="text-secondary">Bivin R</strong> has won <strong className="text-secondary">Rs.500</strong>!
+                </p>
+                <p className="font-label text-xs text-tertiary">Congratulations! 🎊</p>
+              </div>
+
               <p className="font-label text-sm text-on-surface text-center pt-2">
                 Good luck to everyone, and may the best predictor win! 🍀⚽
               </p>
@@ -254,6 +268,16 @@ export default function Dashboard() {
           <p className="font-label text-xs text-on-surface-variant">
             📢 Make sure to submit your predictions before kickoff and don't miss your chance to win!
           </p>
+
+          {/* Winner Announcement */}
+          <div className="bg-gradient-to-r from-secondary/20 to-tertiary/20 border border-secondary/40 rounded-lg p-4 text-center space-y-2">
+            <span className="text-xl">🎉🏆🎉</span>
+            <p className="font-headline font-bold text-sm text-secondary">Match Winner Announced!</p>
+            <p className="font-label text-xs text-on-surface"><strong>France vs Spain</strong></p>
+            <p className="font-label text-sm text-on-surface">
+              🥇 <strong className="text-secondary">Bivin R</strong> wins <strong className="text-secondary">Rs.500</strong>! Congratulations! 🎊
+            </p>
+          </div>
 
           <p className="font-label text-sm text-on-surface text-center">
             Good luck to everyone, and may the best predictor win! 🍀⚽
