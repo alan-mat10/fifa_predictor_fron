@@ -298,29 +298,12 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Prize Distribution Feed */}
+      {/* Prize Distribution Feed - Carousel */}
       <div className="xl:col-span-12 bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/50 shadow-lg">
-        <div className="relative">
-          <img
-            src="/winners/bivin-france-spain.jpg"
-            alt="Prize Distribution - Bivin R"
-            className="w-full h-auto object-cover"
-          />
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-5">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-secondary/30 border-2 border-secondary flex items-center justify-center">
-                <span className="material-symbols-outlined text-secondary text-sm">emoji_events</span>
-              </div>
-              <div>
-                <p className="font-headline font-bold text-sm text-white">Prize Awarded! 🎉</p>
-                <p className="font-label text-xs text-white/80">France vs Spain — Rs.500 to Bivin R</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="px-5 py-3 bg-surface-container">
+        <PrizeCarousel />
+        <div className="px-4 py-3 bg-surface-container">
           <p className="font-label text-xs text-on-surface-variant">
-            🏆 Congratulations to <strong className="text-secondary">Bivin R</strong> for winning the prediction contest for France vs Spain!
+            🏆 Congratulations to our winners!
           </p>
         </div>
       </div>
@@ -525,6 +508,93 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+const prizeSlides = [
+  { image: '/winners/arg-eng-winner1.jpg', name: 'Mayadas', caption: 'Argentina vs England — Rs.250 to Mayadas' },
+  { image: '/winners/arg-eng-winner2.jpg', name: 'Bhavya', caption: 'Argentina vs England — Rs.250 to Bhavya' },
+  { image: '/winners/bivin-france-spain.jpg', name: 'Bivin R', caption: 'France vs Spain — Rs.500 to Bivin R' },
+]
+
+function PrizeCarousel() {
+  const [current, setCurrent] = useState(0)
+  const [seenSlides, setSeenSlides] = useState(new Set())
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(prev => {
+        const next = (prev + 1) % prizeSlides.length
+        setSeenSlides(s => new Set([...s, prev]))
+        return next
+      })
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const slide = prizeSlides[current]
+  const showConfetti = !seenSlides.has(current)
+
+  return (
+    <div className="relative overflow-hidden">
+      {/* Confetti burst from top-left — only first time per slide */}
+      {showConfetti && (
+        <div className="absolute top-0 left-0 pointer-events-none z-10 w-full h-full">
+          {[...Array(25)].map((_, i) => {
+            const angle = (i * 15) * Math.PI / 180
+            const dist = 120 + Math.random() * 200
+            const tx = Math.cos(angle) * dist
+            const ty = Math.sin(angle) * dist
+            return (
+              <div
+                key={`${current}-${i}`}
+                className="absolute w-3 h-3 rounded-sm"
+                style={{
+                  left: '20px',
+                  top: '20px',
+                  backgroundColor: ['#00ffcc', '#ff2d78', '#ffd700', '#7c4dff', '#00e5ff', '#ff6d00'][i % 6],
+                  animation: `confetti-burst 1.5s ease-out forwards`,
+                  animationDelay: `${i * 0.04}s`,
+                  '--tx': `${tx}px`,
+                  '--ty': `${ty}px`,
+                }}
+              />
+            )
+          })}
+        </div>
+      )}
+      {/* Winner name near top-left */}
+      <div className="absolute top-3 left-3 z-20">
+        <span className="font-headline font-extrabold text-lg text-secondary drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">🏆 {slide.name}</span>
+      </div>
+      {/* Image */}
+      <img
+        src={slide.image}
+        alt={slide.name}
+        className="w-full h-auto object-cover transition-opacity duration-500"
+      />
+      {/* Bottom overlay */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-4 py-3 z-20">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-secondary/30 border-2 border-secondary flex items-center justify-center shrink-0">
+            <span className="material-symbols-outlined text-secondary text-xs">emoji_events</span>
+          </div>
+          <p className="font-headline font-bold text-xs text-white">
+            🎉 {slide.caption}
+          </p>
+        </div>
+      </div>
+      {/* Dots */}
+      <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+        {prizeSlides.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrent(i)}
+            className={`w-2 h-2 rounded-full transition-all ${i === current ? 'bg-secondary w-4' : 'bg-white/50'}`}
+          />
+        ))}
       </div>
     </div>
   )

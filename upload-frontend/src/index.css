@@ -140,3 +140,18 @@
 .animate-pulse-slow {
   animation: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Confetti animation */
+@keyframes confetti {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+}
+.animate-confetti {
+  animation: confetti 3s ease-in-out forwards;
+}
+
+/* Confetti burst from corner */
+@keyframes confetti-burst {
+  0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx, 80px), var(--ty, 120px)) rotate(360deg) scale(0.5); opacity: 0; }
+}
