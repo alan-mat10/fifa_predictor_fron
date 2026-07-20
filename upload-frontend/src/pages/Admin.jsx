@@ -919,11 +919,6 @@ export default function Admin() {
           <div className="space-y-3">
             <label className="font-label text-xs text-on-surface-variant uppercase tracking-widest">Golden Glove (Best GK) — +4 pts</label>
             <PlayerAutocomplete value={goldenGloveName} onChange={setGoldenGloveName} placeholder="Search goalkeeper..." onSubmit={handleAwardGoldenGlove} submitting={awardSubmitting} />
-                className="px-6 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
-              >
-                AWARD
-              </button>
-            </div>
           </div>
         </div>
       </div>
