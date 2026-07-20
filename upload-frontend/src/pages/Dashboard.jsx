@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [announcement, setAnnouncement] = useState(null)
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
   const [showContestPopup, setShowContestPopup] = useState(false)
+  const [showWinnerPopup, setShowWinnerPopup] = useState(false)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -49,6 +50,14 @@ export default function Dashboard() {
           }
         }
         if (prizeRes.status === 'fulfilled') setPrizeWinners(prizeRes.value.data)
+
+        // Check if tournament winner is announced
+        try {
+          const lockRes = await predictionsAPI.getTournamentLockStatus()
+          if (lockRes.data?.winnerAnnounced && !sessionStorage.getItem('winner_popup_seen')) {
+            setShowWinnerPopup(true)
+          }
+        } catch (e) {}
       } catch (err) {
         console.error(err)
       } finally {
@@ -202,6 +211,61 @@ export default function Dashboard() {
                 className="w-full py-3 bg-primary/20 border border-primary/50 text-primary font-headline font-bold text-xs tracking-widest rounded-lg hover:bg-primary/30 transition-all"
               >
                 LET'S GO! 🚀
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tournament Winner Popup — dynamic from leaderboard */}
+      {showWinnerPopup && leaderboard.length >= 3 && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" onClick={() => { setShowWinnerPopup(false); sessionStorage.setItem('winner_popup_seen', '1') }}>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div
+            className="relative bg-surface-container rounded-2xl border border-secondary/40 shadow-[0_0_60px_rgba(0,255,204,0.3)] w-full max-w-sm overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-gradient-to-r from-secondary/30 via-primary/20 to-tertiary/30 px-6 py-5 text-center border-b border-secondary/20">
+              <span className="text-4xl">🏆</span>
+              <h3 className="font-headline font-bold text-lg text-on-surface mt-2">Tournament Champions!</h3>
+              <p className="font-label text-xs text-on-surface-variant mt-1">FIFA World Cup 2026 Predictor</p>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              {/* 1st Place */}
+              <div className="flex items-center gap-4 p-4 bg-secondary/10 border border-secondary/30 rounded-xl">
+                <span className="text-3xl">🥇</span>
+                <div className="flex-1">
+                  <p className="font-headline font-extrabold text-lg text-secondary">{leaderboard[0]?.username}</p>
+                  <p className="font-label text-xs text-on-surface-variant">{leaderboard[0]?.totalPoints} points</p>
+                </div>
+                <span className="font-headline font-bold text-sm text-secondary">🎉</span>
+              </div>
+              {/* 2nd Place */}
+              <div className="flex items-center gap-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                <span className="text-2xl">🥈</span>
+                <div className="flex-1">
+                  <p className="font-headline font-bold text-sm text-on-surface">{leaderboard[1]?.username}</p>
+                  <p className="font-label text-[10px] text-on-surface-variant">{leaderboard[1]?.totalPoints} points</p>
+                </div>
+              </div>
+              {/* 3rd Place */}
+              <div className="flex items-center gap-4 p-3 bg-tertiary/5 border border-tertiary/20 rounded-lg">
+                <span className="text-2xl">🥉</span>
+                <div className="flex-1">
+                  <p className="font-headline font-bold text-sm text-on-surface">{leaderboard[2]?.username}</p>
+                  <p className="font-label text-[10px] text-on-surface-variant">{leaderboard[2]?.totalPoints} points</p>
+                </div>
+              </div>
+              <p className="font-label text-xs text-on-surface-variant text-center pt-2">
+                Congratulations to all participants! 🎊
+              </p>
+            </div>
+            <div className="px-6 pb-5">
+              <button
+                onClick={() => { setShowWinnerPopup(false); sessionStorage.setItem('winner_popup_seen', '1') }}
+                className="w-full py-3 bg-secondary/20 border border-secondary/50 text-secondary font-headline font-bold text-xs tracking-widest rounded-lg hover:bg-secondary/30 transition-all"
+              >
+                AMAZING! 🏆
               </button>
             </div>
           </div>

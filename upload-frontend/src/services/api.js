@@ -145,6 +145,10 @@ export const adminAPI = {
     api.post(`/api/admin/match/${matchId}/prize-winner?winner=${encodeURIComponent(winner)}`),
   changeUserPassword: (username, newPassword) =>
     api.post(`/api/admin/change-password?username=${encodeURIComponent(username)}&newPassword=${encodeURIComponent(newPassword)}`),
+  announceWinner: () =>
+    api.post('/api/admin/announce-winner'),
+  revokeWinnerAnnouncement: () =>
+    api.post('/api/admin/revoke-winner-announcement'),
   editMatchScore: (matchId, team1Score, team2Score) =>
     api.post(`/api/admin/edit-match-score?matchId=${matchId}&team1Score=${team1Score}&team2Score=${team2Score}`),
   editMatchDetails: (data) =>

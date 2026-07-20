@@ -1061,6 +1061,42 @@ export default function Admin() {
             🔓 UNLOCK
           </button>
         </div>
+
+        {/* Announce Tournament Winner */}
+        <div className="mt-4 pt-4 border-t border-outline-variant">
+          <p className="font-label text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Tournament Winner Announcement</p>
+          <p className="text-xs text-on-surface-variant mb-3">
+            This shows a popup to all users with 1st, 2nd, 3rd place from the leaderboard.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  await adminAPI.announceWinner()
+                  addToast('Winner announced! Popup will show for all users.', 'success')
+                } catch (err) {
+                  addToast('Failed to announce', 'error')
+                }
+              }}
+              className="flex-1 py-2.5 bg-secondary/20 border border-secondary/50 text-secondary font-label text-xs tracking-widest rounded hover:bg-secondary/30 transition-all"
+            >
+              🏆 ANNOUNCE WINNER
+            </button>
+            <button
+              onClick={async () => {
+                try {
+                  await adminAPI.revokeWinnerAnnouncement()
+                  addToast('Winner announcement revoked', 'success')
+                } catch (err) {
+                  addToast('Failed to revoke', 'error')
+                }
+              }}
+              className="flex-1 py-2.5 bg-error/20 border border-error/50 text-error font-label text-xs tracking-widest rounded hover:bg-error/30 transition-all"
+            >
+              ❌ REVOKE
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Invite Code Management */}
