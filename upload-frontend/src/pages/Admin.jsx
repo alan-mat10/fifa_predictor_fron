@@ -906,59 +906,19 @@ export default function Admin() {
           {/* Top Scorer */}
           <div className="space-y-3">
             <label className="font-label text-xs text-on-surface-variant uppercase tracking-widest">Golden Boot (Top Scorer) — +4 pts</label>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={topScorerName}
-                onChange={(e) => setTopScorerName(e.target.value)}
-                placeholder="Player name..."
-                className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
-              />
-              <button
-                onClick={handleAwardTopScorer}
-                disabled={!topScorerName.trim() || awardSubmitting}
-                className="px-6 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
-              >
-                AWARD
-              </button>
-            </div>
+            <PlayerAutocomplete value={topScorerName} onChange={setTopScorerName} placeholder="Search player..." onSubmit={handleAwardTopScorer} submitting={awardSubmitting} />
           </div>
 
           {/* Golden Ball */}
           <div className="space-y-3">
             <label className="font-label text-xs text-on-surface-variant uppercase tracking-widest">Golden Ball (Best Player) — +4 pts</label>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={goldenBallName}
-                onChange={(e) => setGoldenBallName(e.target.value)}
-                placeholder="Player name..."
-                className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
-              />
-              <button
-                onClick={handleAwardGoldenBall}
-                disabled={!goldenBallName.trim() || awardSubmitting}
-                className="px-6 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
-              >
-                AWARD
-              </button>
-            </div>
+            <PlayerAutocomplete value={goldenBallName} onChange={setGoldenBallName} placeholder="Search player..." onSubmit={handleAwardGoldenBall} submitting={awardSubmitting} />
           </div>
 
           {/* Golden Glove */}
           <div className="space-y-3">
             <label className="font-label text-xs text-on-surface-variant uppercase tracking-widest">Golden Glove (Best GK) — +4 pts</label>
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={goldenGloveName}
-                onChange={(e) => setGoldenGloveName(e.target.value)}
-                placeholder="Goalkeeper name..."
-                className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
-              />
-              <button
-                onClick={handleAwardGoldenGlove}
-                disabled={!goldenGloveName.trim() || awardSubmitting}
+            <PlayerAutocomplete value={goldenGloveName} onChange={setGoldenGloveName} placeholder="Search goalkeeper..." onSubmit={handleAwardGoldenGlove} submitting={awardSubmitting} />
                 className="px-6 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
               >
                 AWARD
@@ -1629,6 +1589,59 @@ function PrizeWinnerManager({ matches, addToast, onUpdate }) {
           >
             {submitting ? '...' : 'SET WINNER'}
           </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PlayerAutocomplete({ value, onChange, placeholder, onSubmit, submitting }) {
+  const [results, setResults] = useState([])
+  const [showResults, setShowResults] = useState(false)
+
+  useEffect(() => {
+    if (value.length < 2) { setResults([]); return }
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await playersAPI.search(value)
+        setResults(res.data.slice(0, 8))
+        setShowResults(true)
+      } catch (e) { setResults([]) }
+    }, 300)
+    return () => clearTimeout(timeout)
+  }, [value])
+
+  return (
+    <div className="relative">
+      <div className="flex gap-3">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => results.length > 0 && setShowResults(true)}
+          placeholder={placeholder}
+          className="flex-1 bg-surface-dim border border-outline-variant focus:border-tertiary focus:ring-0 focus:outline-none text-on-surface font-label text-sm px-4 py-2.5 rounded-lg"
+        />
+        <button
+          onClick={() => { onSubmit(); setShowResults(false) }}
+          disabled={!value.trim() || submitting}
+          className="px-6 py-2.5 bg-tertiary/20 border border-tertiary/50 text-tertiary font-label font-bold text-xs tracking-widest rounded hover:bg-tertiary/30 transition-all disabled:opacity-30"
+        >
+          AWARD
+        </button>
+      </div>
+      {showResults && results.length > 0 && (
+        <div className="absolute z-50 top-full left-0 right-16 mt-1 bg-surface-container border border-outline-variant rounded-lg max-h-40 overflow-y-auto shadow-lg">
+          {results.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => { onChange(p.name); setShowResults(false) }}
+              className="w-full text-left px-4 py-2 hover:bg-surface-variant transition-colors border-b border-outline-variant last:border-b-0"
+            >
+              <span className="font-label text-sm">{p.name}</span>
+              <span className="font-label text-[10px] text-on-surface-variant ml-2">({p.teamName})</span>
+            </button>
+          ))}
         </div>
       )}
     </div>
